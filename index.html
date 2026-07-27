@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-full bg-slate-950 text-slate-100" style="background-color: #020617;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#020617">
+  <meta name="msapplication-navbutton-color" content="#020617">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Tabu Oyunu</title>
+  
+  <style>
+    /* TEMEL SIFIRLAMA VE ÇEVRİMDIŞI YAZI TİPLERİ */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      background-color: #020617 !important;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 60%, #020617 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* KAMERA ÇENTİĞİ VE GÜVENLİ ALAN (SAFE AREA) AYARLARI */
+    #app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 440px;
+      width: 100%;
+      height: 100%;
+      margin: 0 auto;
+      padding-top: max(24px, env(safe-area-inset-top, 24px));
+      padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+      padding-left: max(16px, env(safe-area-inset-left, 16px));
+      padding-right: max(16px, env(safe-area-inset-right, 16px));
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* KART VE PANEL TASARIMLARI */
+    .panel {
+      background-color: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .card-shadow {
+      box-shadow: 0 25px 35px -10px rgba(0, 0, 0, 0.7), 0 0 30px rgba(251, 191, 36, 0.08);
+    }
+
+    /* FORM & SLIDER */
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 4px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background-color: rgba(2, 6, 23, 0.9);
+      border: 1px solid rgba(51, 65, 85, 0.8);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      outline: none;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    #team1-name { color: #f87171; }
+    #team1-name:focus { border-color: #ef4444; box-shadow: 0 0 12px rgba(239, 68, 68, 0.3); }
+
+    #team2-name { color: #60a5fa; }
+    #team2-name:focus { border-color: #3b82f6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.3); }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: #020617;
+      border-radius: 8px;
+      appearance: none;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #f59e0b;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+      transition: transform 0.15s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.2);
+    }
+
+    input[type="range"].range-red::-webkit-slider-thumb {
+      background: #ef4444;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+
+    /* BUTONLAR */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      border-radius: 18px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
+      will-change: transform;
+    }
+
+    .btn:active {
+      transform: translate3d(0, 0, 0) scale(0.94) !important;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #dc2626 0%, #d97706 100%);
+      color: #ffffff;
+      padding: 16px;
+      font-size: 18px;
+      box-shadow: 0 10px 20px -5px rgba(220, 38, 38, 0.4);
+    }
+
+    .btn-green {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: #ffffff;
+      padding: 16px;
+      font-size: 18px;
+      box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-blue {
+      background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+      color: #ffffff;
+      padding: 16px;
+      font-size: 18px;
+      box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-action {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 6px;
+      border-radius: 16px;
+      font-size: 12px;
+      color: white;
+      gap: 6px;
+      box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-tabu { background: linear-gradient(180deg, #dc2626 0%, #991b1b 100%); border: 1px solid rgba(239,68,68,0.3); }
+    .btn-pass { background: linear-gradient(180deg, #d97706 0%, #b45309 100%); border: 1px solid rgba(245,158,11,0.3); }
+    .btn-correct { background: linear-gradient(180deg, #059669 0%, #047857 100%); border: 1px solid rgba(16,185,129,0.3); }
+
+    .btn-action:disabled {
+      opacity: 0.35;
+      pointer-events: none;
+      filter: grayscale(0.6);
+    }
+
+    /* EKRAN GEÇİŞİ ANIMASYONU */
+    @keyframes screenSlideIn {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, 20px, 0) scale(0.96);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+    }
+
+    .screen-enter {
+      animation: screenSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* KART GEÇİŞ ANIMASYONLARI */
+    @keyframes cardCorrectAnim {
+      0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); opacity: 1; }
+      40% { transform: translate3d(140px, -20px, 0) rotate(10deg) scale(0.95); opacity: 0.5; filter: drop-shadow(0 0 25px rgba(16, 185, 129, 0.8)); }
+      41% { transform: translate3d(-100px, 10px, 0) rotate(-6deg) scale(0.92); opacity: 0; }
+      100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); opacity: 1; }
+    }
+
+    @keyframes cardTabuAnim {
+      0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); opacity: 1; }
+      20% { transform: translate3d(-15px, 0, 0) rotate(-2deg); }
+      40% { transform: translate3d(-140px, -20px, 0) rotate(-10deg) scale(0.95); opacity: 0.5; filter: drop-shadow(0 0 25px rgba(239, 68, 68, 0.8)); }
+      41% { transform: translate3d(100px, 10px, 0) rotate(6deg) scale(0.92); opacity: 0; }
+      100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); opacity: 1; }
+    }
+
+    @keyframes cardPassAnim {
+      0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+      40% { transform: translate3d(0, -90px, 0) scale(0.88); opacity: 0.3; filter: drop-shadow(0 0 25px rgba(245, 158, 11, 0.8)); }
+      41% { transform: translate3d(0, 50px, 0) scale(0.92); opacity: 0; }
+      100% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+    }
+
+    .anim-correct { animation: cardCorrectAnim 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; will-change: transform, opacity; }
+    .anim-tabu { animation: cardTabuAnim 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; will-change: transform, opacity; }
+    .anim-pass { animation: cardPassAnim 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; will-change: transform, opacity; }
+
+    /* SPLASH & POP ANIMASYONLARI */
+    #splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #020617;
+      padding: 24px;
+      text-align: center;
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+    }
+
+    @keyframes logoPulseGlow {
+      0%, 100% { transform: translate3d(0, 0, 0) scale(1); filter: drop-shadow(0 0 20px rgba(239,68,68,0.5)); }
+      50% { transform: translate3d(0, -4px, 0) scale(1.06); filter: drop-shadow(0 0 40px rgba(245,158,11,0.8)); }
+    }
+
+    .logo-glow {
+      animation: logoPulseGlow 2.2s ease-in-out infinite;
+    }
+
+    /* SPLASH YÜKLENME BARI ANIMASYONU (Sıfırdan tam akıcı dolum) */
+    .splash-bar-container {
+      width: 200px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
+      margin-top: 24px;
+    }
+
+    @keyframes splashBarFill {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+
+    .splash-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ef4444, #f59e0b, #fde047);
+      border-radius: 10px;
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.9);
+      animation: splashBarFill 2.2s ease-in-out forwards;
+    }
+
+    @keyframes countPopAnim {
+      0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+      60% { transform: scale(1.25) rotate(0deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .animate-pop {
+      animation: countPopAnim 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      will-change: transform, opacity;
+    }
+
+    /* UYARI PULSE (SON 10 SN) */
+    @keyframes timerWarningPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    }
+
+    .timer-warning {
+      animation: timerWarningPulse 1s infinite;
+    }
+
+    .timer-rect {
+      transition: stroke-dashoffset 0.95s linear, stroke 0.3s ease;
+    }
+
+    /* SVG IKONLAR SİZİNG & FLEX FIX */
+    .icon-sm { width: 16px; height: 16px; min-width: 16px; min-height: 16px; flex-shrink: 0; display: inline-block; vertical-align: middle; }
+    .icon-md { width: 22px; height: 22px; min-width: 22px; min-height: 22px; flex-shrink: 0; display: inline-block; vertical-align: middle; }
+    .icon-lg { width: 28px; height: 28px; min-width: 28px; min-height: 28px; flex-shrink: 0; display: inline-block; vertical-align: middle; }
+    .icon-xl { width: 52px; height: 52px; min-width: 52px; min-height: 52px; flex-shrink: 0; display: inline-block; vertical-align: middle; }
+
+    /* YARDIMCI UTILITY */
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  </style>
+</head>
+<body style="background-color: #020617;">
+
+  <!-- 🚀 AÇILIŞ / SPLASH EKRANI -->
+  <div id="splash-screen">
+    <div class="logo-glow">
+      <h1 style="font-size: 64px; font-weight: 900; letter-spacing: 8px; background: linear-gradient(135deg, #ef4444, #f59e0b, #fde047); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        TABU
+      </h1>
+    </div>
+    <!-- Akıcı Dolum Barı -->
+    <div class="splash-bar-container">
+      <div class="splash-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- ⏱️ 3-2-1 GERİ SAYIM KATMANI -->
+  <div id="countdown-overlay" class="hidden" style="position: fixed; inset: 0; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(12px); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center;">
+    <span id="countdown-team-title" style="color: #f59e0b; font-weight: 800; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">
+      Kırmızı Takım Hazırlan!
+    </span>
+    <div id="countdown-number" style="font-size: 110px; font-weight: 900; color: #f59e0b; text-shadow: 0 10px 30px rgba(251,191,36,0.4);">
+      3
+    </div>
+  </div>
+
+  <!-- UYGULAMA ANA KONTEYNERİ -->
+  <div id="app">
+    
+    <!-- ⚙️ 1. AYARLAR / BAŞLANGIÇ EKRANI -->
+    <div id="screen-setup" class="screen hidden">
+      <!-- Üst TABU Başlığı -->
+      <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 8px 0;">
+        <h1 style="font-size: 46px; font-weight: 900; letter-spacing: 6px; background: linear-gradient(135deg, #ef4444, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.3));">
+          TABU
+        </h1>
+      </div>
+
+      <div class="panel" style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="font-size: 11px; font-weight: 800; color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; letter-spacing: 1px;">
+          OYUN AYARLARI
+        </div>
+        
+        <!-- Takım İsimleri -->
+        <div>
+          <label>1. Takım Adı</label>
+          <input type="text" id="team1-name" value="Kırmızı Takım">
+        </div>
+        <div>
+          <label>2. Takım Adı</label>
+          <input type="text" id="team2-name" value="Mavi Takım">
+        </div>
+
+        <!-- Tur Süresi -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label style="margin:0;">Tur Süresi</label>
+            <span id="time-val" style="font-size: 12px; font-weight: 800; color: #f59e0b;">60 saniye</span>
+          </div>
+          <input type="range" id="input-time" min="30" max="120" step="15" value="60">
+        </div>
+
+        <!-- Toplam Tur -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label style="margin:0;">Toplam Tur Sayısı</label>
+            <span id="rounds-val" style="font-size: 12px; font-weight: 800; color: #f59e0b;">3 Tur</span>
+          </div>
+          <input type="range" id="input-rounds" min="1" max="20" step="1" value="3">
+        </div>
+
+        <!-- Tabu Ceza Puanı -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label style="margin:0;">Tabu Ceza Puanı</label>
+            <span id="tabu-penalty-val" style="font-size: 12px; font-weight: 800; color: #ef4444;">-1 Puan</span>
+          </div>
+          <input type="range" id="input-tabu-penalty" class="range-red" min="1" max="5" step="1" value="1">
+        </div>
+
+        <!-- Pas Hakkı -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label style="margin:0;">Her Turdaki Pas Hakkı</label>
+            <span id="pass-limit-val" style="font-size: 12px; font-weight: 800; color: #f59e0b;">3 Pas</span>
+          </div>
+          <input type="range" id="input-pass-limit" min="0" max="10" step="1" value="3">
+        </div>
+      </div>
+
+      <button id="btn-start-game" class="btn btn-primary" style="margin-top: 10px;">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <span>Oyunu Başlat</span>
+      </button>
+    </div>
+
+    <!-- 🚩 2. TUR HAZIRLIK EKRANI -->
+    <div id="screen-ready" class="screen hidden">
+      <div style="text-align: center; padding-top: 6px;">
+        <span id="ready-round-badge" style="background: rgba(15,23,42,0.9); color: #f59e0b; font-size: 12px; font-weight: 800; padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(245,158,11,0.3);">
+          Tur 1 / 3
+        </span>
+        <h2 id="ready-team-name" style="font-size: 34px; font-weight: 900; margin-top: 12px; text-shadow: 0 4px 10px rgba(0,0,0,0.5);">Kırmızı Takım</h2>
+        <p style="color: #94a3b8; font-size: 13px; font-weight: 600; margin-top: 4px;">Sıra sizde! Anlatıcı cihazı eline alsın.</p>
+      </div>
+
+      <!-- Skor Tablosu -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: auto 0;">
+        <div class="panel" style="text-align: center; border-color: rgba(239,68,68,0.3); padding: 16px;">
+          <p id="ready-score-team1-label" style="font-size: 12px; font-weight: 800; color: #f87171; margin-bottom: 4px;" class="truncate">Kırmızı Takım</p>
+          <p id="ready-score-team1" style="font-size: 36px; font-weight: 900;">0</p>
+        </div>
+        <div class="panel" style="text-align: center; border-color: rgba(59,130,246,0.3); padding: 16px;">
+          <p id="ready-score-team2-label" style="font-size: 12px; font-weight: 800; color: #60a5fa; margin-bottom: 4px;" class="truncate">Mavi Takım</p>
+          <p id="ready-score-team2" style="font-size: 36px; font-weight: 900;">0</p>
+        </div>
+      </div>
+
+      <button id="btn-start-turn" class="btn btn-green">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Süreyi Başlat</span>
+      </button>
+    </div>
+
+    <!-- 🎴 3. AKTİF OYUN EKRANI -->
+    <div id="screen-play" class="screen hidden">
+      
+      <!-- Üst Bilgi Barı & Süre -->
+      <div class="panel" style="padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span id="play-team-badge" style="width: 12px; height: 12px; border-radius: 50%; background: #ef4444; display: inline-block; flex-shrink: 0;"></span>
+          <span id="play-team-name" style="font-weight: 800; font-size: 14px; color: #ffffff;" class="truncate">Kırmızı</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <!-- Durdur Butonu -->
+          <button id="btn-pause" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; padding: 8px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="4" width="4" height="16"/>
+              <rect x="14" y="4" width="4" height="16"/>
+            </svg>
+          </button>
+          
+          <!-- Dinamik Çerçeveli Sayaç Kutusu -->
+          <div id="timer-box" style="position: relative; width: 96px; height: 42px; display: flex; align-items: center; justify-content: center; background: #020617; border-radius: 14px;">
+            <svg style="position: absolute; inset: 0; width: 100%; height: 100%;" viewBox="0 0 96 42">
+              <rect x="2" y="2" width="92" height="38" rx="12" ry="12" fill="none" stroke="#1e293b" stroke-width="2.5" />
+              <rect id="timer-border" x="2" y="2" width="92" height="38" rx="12" ry="12" fill="none" stroke="#facc15" stroke-width="2.5" stroke-linecap="round" class="timer-rect" />
+            </svg>
+            <div style="position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; gap: 6px; color: #facc15;">
+              <svg id="timer-icon" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span id="play-timer" style="font-weight: 900; font-size: 19px; line-height: 1;">60</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Anlık Tur Puan Özeti -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; text-align: center; font-size: 12px; font-weight: 800;">
+        <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); padding: 8px; border-radius: 12px; color: #34d399;">
+          Doğru: <span id="stat-correct">0</span>
+        </div>
+        <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); padding: 8px; border-radius: 12px; color: #f87171;">
+          Tabu: <span id="stat-tabu">0</span>
+        </div>
+        <div style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); padding: 8px; border-radius: 12px; color: #fbbf24;">
+          Kalan Pas: <span id="stat-pass">3</span>
+        </div>
+      </div>
+
+      <!-- KART GÖRÜNÜMÜ -->
+      <div id="card-container" style="position: relative; flex: 1; display: flex; flex-direction: column; margin: 4px 0;">
+        
+        <!-- Oyun Duraklatıldı Katmanı -->
+        <div id="pause-overlay" class="hidden" style="position: absolute; inset: 0; background: rgba(2,6,23,0.96); backdrop-filter: blur(12px); border-radius: 24px; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; gap: 16px;">
+          <div style="padding: 16px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); border-radius: 50%; color: #f59e0b;">
+            <svg class="icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="10" y1="15" x2="10" y2="9"/>
+              <line x1="14" y1="15" x2="14" y2="9"/>
+            </svg>
+          </div>
+          <h3 style="font-size: 24px; font-weight: 900; color: #ffffff;">Oyun Durduruldu</h3>
+          <p style="color: #94a3b8; font-size: 12px;">Kartlar gizlendi. Hazır olduğunuzda devam edin.</p>
+          
+          <div style="display: flex; flex-direction: column; width: 100%; gap: 10px; max-width: 220px; margin-top: 8px;">
+            <button id="btn-resume" class="btn btn-green" style="padding: 12px;">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>Devam Et</span>
+            </button>
+            <button id="btn-main-menu" class="btn" style="background: rgba(30,41,59,0.9); color: #f8fafc; border: 1px solid rgba(255,255,255,0.1); padding: 12px;">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+              <span>Ana Menü</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Kart İçeriği (KOMPAKT DÜZEN) -->
+        <div id="card-card" class="panel card-shadow" style="flex: 1; display: flex; flex-direction: column; justify-content: center; border-width: 2px; padding: 20px 24px; gap: 16px;">
+          
+          <!-- Hedef Kelime -->
+          <div style="text-align: center; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <h2 id="card-word" style="font-size: 32px; font-weight: 900; color: #fde047; letter-spacing: 1px; text-transform: uppercase; line-height: 1.2;">
+              AŞÇI
+            </h2>
+          </div>
+
+          <!-- Yasaklı Kelimeler Listesi -->
+          <div id="card-forbidden" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- JS ile dolacak -->
+          </div>
+
+        </div>
+      </div>
+
+      <!-- AKSİYON BUTONLARI -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+        <button id="btn-tabu" class="btn btn-action btn-tabu">
+          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+          <span id="label-tabu-btn">TABU (-1)</span>
+        </button>
+
+        <button id="btn-pass" class="btn btn-action btn-pass">
+          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 4 15 12 5 20 5 4"/>
+            <line x1="19" y1="5" x2="19" y2="19"/>
+          </svg>
+          <span id="label-pass-btn">PAS (3)</span>
+        </button>
+
+        <button id="btn-correct" class="btn btn-action btn-correct">
+          <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span>DOĞRU (+1)</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 📊 4. TUR ÖZET EKRANI -->
+    <div id="screen-summary" class="screen hidden">
+      <div style="text-align: center; padding-top: 4px;">
+        <h2 style="font-size: 28px; font-weight: 900;">Tur Tamamlandı!</h2>
+        <p id="summary-team-title" style="font-size: 14px; font-weight: 800; color: #f59e0b; margin-top: 2px;">Kırmızı Takım Sonuçları</p>
+      </div>
+
+      <!-- Net Puan Panosu -->
+      <div class="panel" style="text-align: center; padding: 16px;">
+        <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Bu Turda Kazanılan Net Puan</span>
+        <p id="summary-net-score" style="font-size: 40px; font-weight: 900; color: #34d399; margin-top: 4px;">+5</p>
+      </div>
+
+      <!-- Sonraki Tura Geç Butonu -->
+      <button id="btn-next-turn" class="btn btn-blue">
+        <span>Sonraki Tura Geç</span>
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </button>
+
+      <!-- Tur Detay Geçmişi -->
+      <div class="panel" style="flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 14px; background: rgba(15,23,42,0.5);">
+        <span style="font-size: 12px; font-weight: 800; color: #cbd5e1; margin-bottom: 8px;">Oynanan Kelimeler:</span>
+        <div id="summary-history-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+          <!-- JS dolduracak -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 🏆 5. OYUN BİTTİ EKRANI -->
+    <div id="screen-gameover" class="screen hidden" style="text-align: center;">
+      <div style="margin-top: 10px;">
+        <div style="display: inline-flex; padding: 20px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); border-radius: 50%; color: #f59e0b; margin-bottom: 12px;">
+          <svg class="icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2"/>
+            <path d="M18 9h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/>
+            <path d="M4 22h16"/>
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
+          </svg>
+        </div>
+        <h2 style="font-size: 32px; font-weight: 900;">Oyun Bitti!</h2>
+        <p id="gameover-winner-text" style="font-size: 20px; font-weight: 800; color: #f59e0b; margin-top: 4px;">🏆 Kırmızı Takım Kazandı!</p>
+      </div>
+
+      <!-- Final Skor Tablosu -->
+      <div class="panel" style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-size: 11px; font-weight: 800; color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">FİNAL SKORLARI</div>
+        <div id="gameover-scores" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- JS dolduracak -->
+        </div>
+      </div>
+
+      <button id="btn-restart" class="btn btn-green">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+        </svg>
+        <span>Yeni Oyun Başlat</span>
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // 🎴 KART VERİ HAVUZU (500 ADET DATA)
+    const ALL_CARDS = [
+  {"id":1,"kelime":"FENOMEN","yasakli_kelimeler":["İNTERNET","ÜNLÜ","TAKİPÇİ","VİDEO","POPÜLER"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":2,"kelime":"SPOILER","yasakli_kelimeler":["DİZİ","FİLM","SONUÇ","BOZMAK","SÖYLEMEK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":3,"kelime":"DİZİ MARATONU","yasakli_kelimeler":["BÖLÜM","GECE","UYKU","BİTİRMEK","EKRAN"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":4,"kelime":"FRAGMAN","yasakli_kelimeler":["FİLM","ÖNCESİ","SİNEMA","TANITIM","SAHNE"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":5,"kelime":"UNUTULMAZ SAHNE","yasakli_kelimeler":["FİLM","AĞLAMAK","FİNAL","KARE","DİZİ"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":6,"kelime":"TREND TOPIC","yasakli_kelimeler":["GÜNDEM","TWİTTER","KONUŞULAN","ETİKET","POPÜLER"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":7,"kelime":"MEME","yasakli_kelimeler":["KOMİK","PAYLAŞIM","GÜLMEK","İNTERNET","ESPRİ"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":8,"kelime":"PODCAST","yasakli_kelimeler":["SES","KAYIT","KONUŞMA","MİKROFON","DİNLEMEK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":9,"kelime":"YOUTUBER","yasakli_kelimeler":["VİDEO","KANAL","ABONE","KAMERA","PAYLAŞMAK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":10,"kelime":"CANLI YAYIN","yasakli_kelimeler":["İZLEYİCİ","EKRAN","ANLIK","YORUM","ÜNLÜ"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":11,"kelime":"ALGORİTMA","yasakli_kelimeler":["ÖNERİ","UYGULAMA","SİSTEM","VERİ","HESAPLAMA"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":12,"kelime":"YÜZ FİLTRESİ","yasakli_kelimeler":["KAMERA","GÜZELLEŞTİRMEK","FOTOĞRAF","UYGULAMA","CİLT"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":13,"kelime":"HİKAYE PAYLAŞIMI","yasakli_kelimeler":["INSTAGRAM","GÖNDERMEK","ANLIK","KAYBOLAN","FOTOĞRAF"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":14,"kelime":"ÜNLÜ OLMAK","yasakli_kelimeler":["ŞÖHRET","TANINMAK","KAMERA","MAGAZİN","TAKİPÇİ"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":15,"kelime":"KIRMIZI HALI","yasakli_kelimeler":["ÜNLÜ","ÖDÜL","GECE","ELBİSE","KAMERA"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":16,"kelime":"ÖDÜL TÖRENİ","yasakli_kelimeler":["GECE","FİLM","SAHNE","KAZANMAK","SUNUM"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":17,"kelime":"DİZİ FİNALİ","yasakli_kelimeler":["SON","BÖLÜM","BEKLEME","MERAK","BİTİŞ"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":18,"kelime":"UYARLAMA","yasakli_kelimeler":["KİTAP","FİLM","ROMAN","SAHNE","SENARYO"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":19,"kelime":"FANTEZİ EVRENİ","yasakli_kelimeler":["BÜYÜ","KARAKTER","KURGU","DÜNYA","YARATIK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":20,"kelime":"SÜPER KAHRAMAN","yasakli_kelimeler":["PELERİN","GÜÇ","MASKE","KÖTÜ","KURTARMAK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":21,"kelime":"ÇİZGİ ROMAN","yasakli_kelimeler":["KAHRAMAN","SAYFA","BALON","KARAKTER","HİKAYE"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":22,"kelime":"ANİME","yasakli_kelimeler":["JAPON","ÇİZİM","KARAKTER","DİZİ","MANGA"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":23,"kelime":"KOSTÜM YARIŞMASI","yasakli_kelimeler":["KARAKTER","FUAR","KILIK","TAKLİT","GİYMEK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":24,"kelime":"FANTASTİK","yasakli_kelimeler":["BÜYÜ","EJDERHA","KURGU","MASAL","EFSANE"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":25,"kelime":"YARIŞMA PROGRAMI","yasakli_kelimeler":["KAMERA","JÜRİ","ELENME","EKRAN","İZLEYİCİ"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":26,"kelime":"YETENEK YARIŞMASI","yasakli_kelimeler":["SAHNE","JÜRİ","PERFORMANS","ALKIŞ","ELENME"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":27,"kelime":"FİLM MÜZİĞİ","yasakli_kelimeler":["SİNEMA","SAHNE","DUYGUSAL","SES","BESTE"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":28,"kelime":"UNUTULMAZ REPLİK","yasakli_kelimeler":["FİLM","SÖZ","KARAKTER","SAHNE","EZBER"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":29,"kelime":"GİŞE REKORU","yasakli_kelimeler":["FİLM","BİLET","SİNEMA","KAZANÇ","SEYİRCİ"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":30,"kelime":"MODA AKIMI","yasakli_kelimeler":["STİL","TREND","KIYAFET","POPÜLER","YAYILMAK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":31,"kelime":"VİRAL OLMAK","yasakli_kelimeler":["PAYLAŞIM","YAYILMAK","İNTERNET","HIZLI","HERKES"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":32,"kelime":"DOĞAL GÖRÜNÜM","yasakli_kelimeler":["FOTOĞRAF","YÜZ","RÖTUŞ","FİLTRE","GERÇEK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":33,"kelime":"FOTOĞRAF RÖTUŞU","yasakli_kelimeler":["DÜZELTME","PROGRAM","YÜZ","GÜZELLEŞTİRME","RESİM"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":34,"kelime":"HAYRAN KULÜBÜ","yasakli_kelimeler":["ÜNLÜ","TAKİPÇİ","SEVGİ","GRUP","DESTEK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":35,"kelime":"İMZA GÜNÜ","yasakli_kelimeler":["KİTAP","YAZAR","KUYRUK","KALEM","HAYRAN"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":36,"kelime":"KONSER TURNESİ","yasakli_kelimeler":["ŞARKICI","SAHNE","ŞEHİR","BİLET","MÜZİK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":37,"kelime":"ALBÜM ÇIKIŞI","yasakli_kelimeler":["ŞARKICI","MÜZİK","ŞARKI","DİNLEYİCİ","YENİ"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":38,"kelime":"ŞARKI SÖZÜ","yasakli_kelimeler":["MELODİ","EZGİ","YAZMAK","ANLAM","NAKARAT"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":39,"kelime":"NAKARAT","yasakli_kelimeler":["ŞARKI","TEKRAR","MELODİ","EZBER","BÖLÜM"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":40,"kelime":"REMIX","yasakli_kelimeler":["ŞARKI","YENİDEN","MÜZİK","DJ","DÜZENLEME"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":41,"kelime":"DANS TRENDİ","yasakli_kelimeler":["VİDEO","HAREKET","MÜZİK","TAKLİT","POPÜLER"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":42,"kelime":"MEYDAN OKUMA","yasakli_kelimeler":["SOSYAL MEDYA","VİDEO","KATILMAK","YARIŞ","TREND"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":43,"kelime":"ETİKETLEMEK","yasakli_kelimeler":["PAYLAŞIM","İSİM","ARKADAŞ","SOSYAL MEDYA","İŞARETLEMEK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":44,"kelime":"BEĞENİ","yasakli_kelimeler":["KALP","SOSYAL MEDYA","PAYLAŞIM","ONAY","BUTON"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":45,"kelime":"TAKİPÇİ SAYISI","yasakli_kelimeler":["SOSYAL MEDYA","HESAP","POPÜLER","ARTMAK","PROFİL"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":46,"kelime":"GÖNDERİ","yasakli_kelimeler":["PAYLAŞMAK","SOSYAL MEDYA","FOTOĞRAF","YAZI","HESAP"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":47,"kelime":"HESAP KAPATMAK","yasakli_kelimeler":["SOSYAL MEDYA","PROFİL","ARA VERMEK","SİLMEK","DONDURMAK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":48,"kelime":"DİJİTAL DETOKS","yasakli_kelimeler":["TELEFON","UZAKLAŞMAK","SOSYAL MEDYA","DİNLENMEK","BAĞIMLILIK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":49,"kelime":"EKRAN SÜRESİ","yasakli_kelimeler":["TELEFON","KONTROL EDEMEMEK","UZUN","BAĞIMLI","UYGULAMA"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":50,"kelime":"UYGULAMA İÇİ SATIN ALMA","yasakli_kelimeler":["OYUN","PARA","KARAKTER","EŞYA","ÖDEME"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":51,"kelime":"E-SPOR","yasakli_kelimeler":["OYUN","YARIŞMA","TAKIM","TURNUVA","BİLGİSAYAR"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":52,"kelime":"YAYINCI","yasakli_kelimeler":["CANLI","OYUN","İZLEYİCİ","EKRAN","YORUM"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":53,"kelime":"AVATAR","yasakli_kelimeler":["KARAKTER","PROFİL","GÖRSEL","TEMSİL","OYUN"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":54,"kelime":"SANAL GERÇEKLİK","yasakli_kelimeler":["GÖZLÜK","TEKNOLOJİ","ORTAM","DENEYİM","SİMÜLASYON"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":55,"kelime":"SANAL EVREN","yasakli_kelimeler":["DİJİTAL","DÜNYA","TEKNOLOJİ","KARAKTER","PLATFORM"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":56,"kelime":"SOHBET ROBOTU","yasakli_kelimeler":["PROGRAM","KONUŞMA","BİLGİSAYAR","CEVAP","YAPAY ZEKA"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":57,"kelime":"YAPAY GÖRÜNTÜ","yasakli_kelimeler":["VİDEO","YÜZ","SAHTE","TEKNOLOJİ","GERÇEK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":58,"kelime":"YETENEK AVCISI","yasakli_kelimeler":["KEŞFETMEK","SAHNE","YILDIZ","BULMAK","MENAJER"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":59,"kelime":"KIYAFET TRENDİ","yasakli_kelimeler":["MODA","GİYMEK","POPÜLER","STİL","AKIM"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":60,"kelime":"NOSTALJİ","yasakli_kelimeler":["ESKİ","ÖZLEM","ANI","GEÇMİŞ","HATIRLAMAK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
+  {"id":61,"kelime":"YAPAY ZEKA","yasakli_kelimeler":["ROBOT","BİLGİSAYAR","ALGORİTMA","PROGRAM","MAKİNE"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":62,"kelime":"AKILLI TELEFON","yasakli_kelimeler":["EKRAN","UYGULAMA","ARAMA","CEP","İNTERNET"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":63,"kelime":"ŞARJ ALETİ","yasakli_kelimeler":["KABLO","PİL","PRİZ","DOLDURMAK","ELEKTRİK"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":64,"kelime":"BLUETOOTH","yasakli_kelimeler":["KABLOSUZ","BAĞLANTI","KULAKLIK","EŞLEŞTİRME","SİNYAL"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":65,"kelime":"WIFI","yasakli_kelimeler":["İNTERNET","ŞİFRE","BAĞLANTI","SİNYAL","KABLOSUZ"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":66,"kelime":"BULUT DEPOLAMA","yasakli_kelimeler":["DOSYA","İNTERNET","YEDEKLEME","SUNUCU","KAYDETMEK"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":67,"kelime":"UYGULAMA MAĞAZASI","yasakli_kelimeler":["TELEFON","İNDİRMEK","PROGRAM","SİMGE","YÜKLEME"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":68,"kelime":"GÜNCELLEME","yasakli_kelimeler":["YAZILIM","YENİ","SÜRÜM","YÜKLEME","SİSTEM"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":69,"kelime":"ŞİFRE","yasakli_kelimeler":["GİZLİ","HESAP","GİRİŞ","GÜVENLİK","KOD"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":70,"kelime":"PARMAK İZİ OKUYUCU","yasakli_kelimeler":["TELEFON","GÜVENLİK","KİLİT","DOKUNMAK","AÇMAK"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":71,"kelime":"YÜZ TANIMA","yasakli_kelimeler":["KAMERA","KİLİT","GÜVENLİK","TELEFON","AÇMAK"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":72,"kelime":"DRONE","yasakli_kelimeler":["UÇMAK","KAMERA","HAVA","UZAKTAN","PERVANE"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":73,"kelime":"AKILLI SAAT","yasakli_kelimeler":["BİLEK","NABIZ","EKRAN","BİLDİRİM","TELEFON"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":74,"kelime":"KABLOSUZ KULAKLIK","yasakli_kelimeler":["MÜZİK","TAKMAK","BLUETOOTH","ŞARJ","SES"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":75,"kelime":"SANAL ASİSTAN","yasakli_kelimeler":["SES","KOMUT","TELEFON","YAPAY ZEKA","CEVAP"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":76,"kelime":"E-TİCARET","yasakli_kelimeler":["ALIŞVERİŞ","İNTERNET","SİPARİŞ","ONLİNE","ÖDEME"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":77,"kelime":"KARGO TAKİP","yasakli_kelimeler":["SİPARİŞ","NUMARA","ULAŞIM","PAKET","İNTERNET"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":78,"kelime":"ONLINE ÖDEME","yasakli_kelimeler":["KART","İNTERNET","ALIŞVERİŞ","ŞİFRE","HESAP"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":79,"kelime":"DİJİTAL CÜZDAN","yasakli_kelimeler":["KART","TELEFON","PARA","ÖDEME","UYGULAMA"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":80,"kelime":"QR KOD","yasakli_kelimeler":["TARAMAK","KARE","TELEFON","BAĞLANTI","KAMERA"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":81,"kelime":"UYARI MESAJI","yasakli_kelimeler":["TELEFON","EKRAN","SES","UYGULAMA","ANLIK"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":82,"kelime":"EKRAN GÖRÜNTÜSÜ","yasakli_kelimeler":["TELEFON","KAYDETMEK","CİHAZ","PAYLAŞMAK","FOTOĞRAF"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":83,"kelime":"YAZILIM HATASI","yasakli_kelimeler":["PROGRAM","BİLGİSAYAR","ÇÖKMEK","KOD","SORUN"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":84,"kelime":"VİRÜS","yasakli_kelimeler":["BİLGİSAYAR","ZARARLI","PROGRAM","BULAŞMAK","DOSYA"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":85,"kelime":"GÜVENLİK DUVARI","yasakli_kelimeler":["BİLGİSAYAR","KORUMA","PROGRAM","AĞ","ENGELLEMEK"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":86,"kelime":"VERİ TABANI","yasakli_kelimeler":["BİLGİ","BİLGİSAYAR","KAYIT","SİSTEM","DEPOLAMA"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":87,"kelime":"TERCÜME UYGULAMASI","yasakli_kelimeler":["DİL","ÇEVİRİ","TELEFON","KELİME","PROGRAM"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":88,"kelime":"SESLİ KOMUT","yasakli_kelimeler":["KONUŞMAK","TELEFON","ASİSTAN","EMRETMEK","MİKROFON"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":89,"kelime":"DOKUNMATİK EKRAN","yasakli_kelimeler":["PARMAK","TELEFON","CAM","DOKUNMAK","KAYDIRMAK"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":90,"kelime":"PİL ÖMRÜ","yasakli_kelimeler":["TELEFON","ŞARJ","BİTMEK","SÜRE","BATARYA"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":91,"kelime":"GPS","yasakli_kelimeler":["KONUM","HARİTA","UYDU","YOL","NAVİGASYON"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":92,"kelime":"NAVİGASYON","yasakli_kelimeler":["YOL","HARİTA","KONUM","SES","TARİF"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":93,"kelime":"BULUT SUNUCU","yasakli_kelimeler":["VERİ","İNTERNET","DEPOLAMA","BİLGİSAYAR","UZAK"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":94,"kelime":"SİBER SALDIRI","yasakli_kelimeler":["HACKER","BİLGİSAYAR","GÜVENLİK","İZİNSİZ","VERİ"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":95,"kelime":"HACKER","yasakli_kelimeler":["BİLGİSAYAR","ŞİFRE","GİRMEK","SALDIRI","SİSTEM"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":96,"kelime":"VPN","yasakli_kelimeler":["BAĞLANTI","GİZLİLİK","İNTERNET","GÜVENLİK","SANAL"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":97,"kelime":"EKRAN KORUYUCU","yasakli_kelimeler":["TELEFON","CAM","ÇİZİK","KIRILMAK","KAPLAMA"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":98,"kelime":"KABLOSUZ ŞARJ","yasakli_kelimeler":["TELEFON","PRİZ","PİL","YÜZEY","ELEKTRİK"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":99,"kelime":"AKILLI EV","yasakli_kelimeler":["SİSTEM","KONTROL","UYGULAMA","IŞIK","UZAKTAN"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":100,"kelime":"ROBOT SÜPÜRGE","yasakli_kelimeler":["EV","TEMİZLİK","OTOMATİK","TOZ","UZAKTAN"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":101,"kelime":"ÜÇ BOYUTLU YAZICI","yasakli_kelimeler":["BASKI","KATMAN","MALZEME","MODEL","ÜRETMEK"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":102,"kelime":"OYUN KONSOLU","yasakli_kelimeler":["EKRAN","KUMANDA","TELEVİZYON","CİHAZ","DİJİTAL"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":103,"kelime":"YAYIN PLATFORMU","yasakli_kelimeler":["DİZİ","FİLM","ABONELİK","İZLEMEK","UYGULAMA"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":104,"kelime":"ABONELİK","yasakli_kelimeler":["AYLIK","ÖDEME","ÜYELİK","UYGULAMA","ÜCRET"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":105,"kelime":"REKLAM ENGELLEYİCİ","yasakli_kelimeler":["TARAYICI","İNTERNET","PROGRAM","SİTE","UYGULAMA"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":106,"kelime":"TARAYICI","yasakli_kelimeler":["İNTERNET","SEKME","SİTE","PROGRAM","ARAMA"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":107,"kelime":"ARAMA MOTORU","yasakli_kelimeler":["İNTERNET","SONUÇ","GOOGLE","SORGU","SİTE"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":108,"kelime":"E-POSTA","yasakli_kelimeler":["MESAJ","GÖNDERME","İNTERNET","YAZIŞMA","HESAP"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":109,"kelime":"EK DOSYA","yasakli_kelimeler":["MAİL","GÖNDERMEK","BELGE","İLİŞTİRMEK","KLASÖR"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":110,"kelime":"BİLDİRİM SESİ","yasakli_kelimeler":["TELEFON","UYARI","EKRAN","MESAJ","TİTREŞİM"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":111,"kelime":"UÇAK MODU","yasakli_kelimeler":["TELEFON","SİNYAL","KAPATMAK","HAVAALANI","BAĞLANTI"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":112,"kelime":"TİTREŞİM","yasakli_kelimeler":["TELEFON","SESSİZ","UYARI","SARSINTI","MOD"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":113,"kelime":"PİKSEL","yasakli_kelimeler":["EKRAN","GÖRÜNTÜ","NOKTA","KALİTE","RENK"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":114,"kelime":"ÇÖZÜNÜRLÜK","yasakli_kelimeler":["EKRAN","GÖRÜNTÜ","NETLİK","KALİTE","PİKSEL"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":115,"kelime":"İŞLEMCİ","yasakli_kelimeler":["BİLGİSAYAR","HIZ","ÇİP","PERFORMANS","BEYİN"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":116,"kelime":"EKRAN KARTI","yasakli_kelimeler":["BİLGİSAYAR","OYUN","GRAFİK","GÖRÜNTÜ","PERFORMANS"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":117,"kelime":"SUNUCU ÇÖKMESİ","yasakli_kelimeler":["İNTERNET","BAĞLANTI","OYUN","ERİŞİLEMEMEK","YOĞUNLUK"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":118,"kelime":"İKİ ADIMLI DOĞRULAMA","yasakli_kelimeler":["ŞİFRE","GÜVENLİK","KOD","TELEFON","ONAY"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":119,"kelime":"BAĞLANTI HIZI","yasakli_kelimeler":["İNTERNET","YAVAŞ","VERİ","İNDİRME","SİNYAL"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":120,"kelime":"AKILLI HOPARLÖR","yasakli_kelimeler":["SES","EV","ASİSTAN","MÜZİK","KOMUT"],"kategori":"Teknoloji","zorluk":"Orta"},
+  {"id":121,"kelime":"AĞZI KULAKLARINA VARMAK","yasakli_kelimeler":["MUTLU","GÜLMEK","SEVİNÇ","YÜZ","NEŞE"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":122,"kelime":"BURNU BÜYÜMEK","yasakli_kelimeler":["KİBİR","GURUR","KENDİNİ BEĞENMEK","ŞIMARMAK","BÖBÜRLENMEK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":123,"kelime":"AYAĞI KAYMAK","yasakli_kelimeler":["DENGE","DÜŞMEK","HATA","YANLIŞ","SÜRÇMEK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":124,"kelime":"GÖZÜ TUTMAK","yasakli_kelimeler":["BEĞENMEK","SEVMEK","BAKIŞ","SEÇMEK","HOŞLANMAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":125,"kelime":"İÇİ RAHATLAMAK","yasakli_kelimeler":["HUZUR","FERAHLAMAK","SAKİNLEŞMEK","ENDİŞE","NEFES"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":126,"kelime":"DİLİNE DOLAMAK","yasakli_kelimeler":["DEDİKODU","KONUŞMAK","SÜREKLİ","AD","BAHSETMEK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":127,"kelime":"KAFAYI TAKMAK","yasakli_kelimeler":["SAPLANTI","DÜŞÜNMEK","SÜREKLİ","ODAKLANMAK","UNUTAMAMAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":128,"kelime":"ELİNE SU DÖKEMEMEK","yasakli_kelimeler":["YETERSİZ","KIYASLAMAK","BECERİ","AŞAĞI","ÜSTÜNLÜK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":129,"kelime":"GÖZ KIRPMAMAK","yasakli_kelimeler":["UYUMAMAK","UYANIK","GECE","DİKKATLİ","SABAH"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":130,"kelime":"KULAK ASMAMAK","yasakli_kelimeler":["DİNLEMEMEK","ÖNEMSEMEMEK","GÖRMEZDEN","UMURSAMAMAK","DİKKAT"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":131,"kelime":"İÇİNE ATMAK","yasakli_kelimeler":["SÖYLEMEMEK","SAKLAMAK","DUYGU","SESSİZ","BASTIRMAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":132,"kelime":"YÜREĞİ AĞZINA GELMEK","yasakli_kelimeler":["KORKU","HEYECAN","KALP","PANİK","ÜRKMEK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":133,"kelime":"AKLINA ESMEK","yasakli_kelimeler":["ANLIK","KARAR","DÜŞÜNCE","ANİDEN","İSTEK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":134,"kelime":"GÖZÜNE UYKU GİRMEMEK","yasakli_kelimeler":["UYUYAMAMAK","ENDİŞE","GECE","UYKUSUZLUK","MERAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":135,"kelime":"KAFASI KARIŞMAK","yasakli_kelimeler":["ŞAŞIRMAK","ANLAYAMAMAK","ZİHİN","DÜŞÜNCE","BULANIK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":136,"kelime":"ELİ AYAĞI DOLAŞMAK","yasakli_kelimeler":["HEYECAN","ŞAŞKINLIK","BECERİKSİZLİK","PANİK","KARIŞMAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":137,"kelime":"DİLİ TUTULMAK","yasakli_kelimeler":["ŞAŞIRMAK","KONUŞAMAMAK","SESSİZ","ŞOK","DONMAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":138,"kelime":"GÖNLÜ OLMAK","yasakli_kelimeler":["RAZI","KABUL","İSTEMEK","ONAY","RIZA"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":139,"kelime":"KAN TER İÇİNDE KALMAK","yasakli_kelimeler":["YORGUNLUK","ÇALIŞMAK","TERLEMEK","EFOR","ZORLANMAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":140,"kelime":"GÖZÜ KARARMAK","yasakli_kelimeler":["BAYILMAK","SİNİR","ÖFKE","FENALAŞMAK","BAŞ DÖNMESİ"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":141,"kelime":"İÇİ İÇİNE SIĞMAMAK","yasakli_kelimeler":["SEVİNÇ","HEYECAN","MUTLULUK","COŞKU","BEKLEMEK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":142,"kelime":"TÜYLERİ DİKEN DİKEN OLMAK","yasakli_kelimeler":["KORKU","ÜRPERME","HEYECAN","VÜCUT","ÜRKÜTÜCÜ"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":143,"kelime":"AĞZI VAR DİLİ YOK","yasakli_kelimeler":["SESSİZ","KONUŞMAMAK","SAKİN","UYSAL","SUSKUN"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":144,"kelime":"BAŞI DÖNMEK","yasakli_kelimeler":["SERSEMLİK","DENGE","BAYILMAK","SARSINTI","FENALIK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":145,"kelime":"KAFAYI YEMEK","yasakli_kelimeler":["ÇILDIRMAK","DELİ","SİNİR","KONTROL","BUNALMAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":146,"kelime":"ELİ BOŞ DÖNMEK","yasakli_kelimeler":["BAŞARISIZ","SONUÇSUZ","KAZANAMAMAK","NAFİLE","GERİ"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":147,"kelime":"GÖZ ARDI ETMEK","yasakli_kelimeler":["ÖNEMSEMEMEK","GÖRMEZDEN","ATLAMA","DİKKAT","UMURSAMAMA"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":148,"kelime":"KULAKTAN DOLMA","yasakli_kelimeler":["YANLIŞ","DUYUM","BİLGİ","DOĞRULANMAMIŞ","SÖYLENTİ"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":149,"kelime":"İÇİ YANMAK","yasakli_kelimeler":["ÜZÜLMEK","ACIMAK","MERHAMET","SIKINTI","VİCDAN"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":150,"kelime":"AYAĞI ALIŞMAK","yasakli_kelimeler":["SIK GELMEK","ALIŞKANLIK","ZİYARET","TEKRAR","YER"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":151,"kelime":"BAŞ AĞRISI OLMAK","yasakli_kelimeler":["DERT","SORUN","ZAHMET","SIKINTI","YÜK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":152,"kelime":"GÖZÜNÜ KIRPMADAN","yasakli_kelimeler":["KORKUSUZCA","CESARET","DURAKSAMADAN","HIZLI","TEREDDÜTSÜZ"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":153,"kelime":"DİLİNİN ALTINDAKİ BAKLAYI ÇIKARMAK","yasakli_kelimeler":["SIR","SÖYLEMEK","İTİRAF","AÇIKLAMAK","GİZLİ"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":154,"kelime":"ELİNDEN GELENİ YAPMAK","yasakli_kelimeler":["ÇABA","GAYRET","UĞRAŞMAK","EMEK","DENEMEK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":155,"kelime":"KAFA YORMAK","yasakli_kelimeler":["DÜŞÜNMEK","ÇÖZMEK","UĞRAŞMAK","ZİHİN","EMEK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":156,"kelime":"GÖNÜL ALMAK","yasakli_kelimeler":["BARIŞMAK","ÖZÜR","HOŞNUT","MEMNUN","TELAFİ"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":157,"kelime":"İÇİNİ DÖKMEK","yasakli_kelimeler":["ANLATMAK","PAYLAŞMAK","DERT","AÇILMAK","KONUŞMAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":158,"kelime":"AĞZINDAN KAÇIRMAK","yasakli_kelimeler":["SIR","İSTEMEDEN","SÖYLEMEK","YANLIŞLIKLA","AÇIĞA"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":159,"kelime":"KAŞ YAPAYIM DERKEN GÖZ ÇIKARMAK","yasakli_kelimeler":["HATA","KÖTÜLEŞTİRMEK","YANLIŞ","BOZMAK","SONUÇ"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":160,"kelime":"ELİ KULAĞINDA OLMAK","yasakli_kelimeler":["YAKIN","BEKLENEN","YAKINDA","NEREDEYSE","HAZIR"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":161,"kelime":"GÖZDEN DÜŞMEK","yasakli_kelimeler":["İTİBAR","KAYBETMEK","DEĞER","SEVİLMEMEK","KÜÇÜLMEK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":162,"kelime":"KAFASINA GÖRE HAREKET ETMEK","yasakli_kelimeler":["BAĞIMSIZ","İNATÇI","DİNLEMEMEK","KENDİ","TAVSİYE"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":163,"kelime":"DİL DÖKMEK","yasakli_kelimeler":["İKNA","YALVARMAK","KONUŞMAK","ISRAR","ANLATMAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":164,"kelime":"İÇ GÜDÜYLE HAREKET ETMEK","yasakli_kelimeler":["SEZGİ","HİSSETMEK","DOĞAL","DÜŞÜNMEDEN","REFLEKS"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":165,"kelime":"AYAĞINI DENK ALMAK","yasakli_kelimeler":["TEDBİR","UYARI","ÖNLEM","TEMKİNLİ","HESAPLI"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":166,"kelime":"BAŞINI BELAYA SOKMAK","yasakli_kelimeler":["SORUN","TEHLİKE","KARIŞMAK","RİSK","DERT"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":167,"kelime":"GÖZÜ YOLDA KALMAK","yasakli_kelimeler":["BEKLEMEK","MERAK","ÖZLEM","GELMEMEK","UMUT"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":168,"kelime":"KAFA TUTMAK","yasakli_kelimeler":["KARŞI GELMEK","İSYAN","DİRENMEK","MEYDAN","İTAATSİZLİK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":169,"kelime":"DİLE GETİRMEK","yasakli_kelimeler":["SÖYLEMEK","İFADE","BELİRTMEK","AÇIKLAMAK","KONUŞMAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":170,"kelime":"İÇİ GEÇMEK","yasakli_kelimeler":["UYUKLAMAK","UYKU","DALMAK","YORGUNLUK","KESTİRMEK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":171,"kelime":"AYAĞA KALKMAK","yasakli_kelimeler":["TOPARLANMAK","İYİLEŞMEK","KALKINMAK","DÜZELMEK","GÜÇLENMEK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":172,"kelime":"BAŞ BAŞA VERMEK","yasakli_kelimeler":["İŞBİRLİĞİ","BERABER","YARDIM","ORTAK","BİRLİKTE"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":173,"kelime":"GÖZÜ AÇILMAK","yasakli_kelimeler":["FARKINA VARMAK","ANLAMAK","UYANMAK","GERÇEK","İDRAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":174,"kelime":"KAFADAN KONTAK OLMAK","yasakli_kelimeler":["DELİ","ÇILGIN","TUHAF","GARİP","ANORMAL"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":175,"kelime":"DİLİ DÖNMEMEK","yasakli_kelimeler":["SÖYLEYEMEMEK","ZOR","TELAFFUZ","KONUŞAMAMAK","YABANCI"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":176,"kelime":"İÇİ BOŞ KONUŞMAK","yasakli_kelimeler":["ANLAMSIZ","YÜZEYSEL","LAF","DEĞERSİZ","SAÇMA"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":177,"kelime":"AYAK UYDURMAK","yasakli_kelimeler":["ADAPTE","UYUM","KATILMAK","DEĞİŞİM","TAKİP"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":178,"kelime":"BAŞTAN SAVMA YAPMAK","yasakli_kelimeler":["ÖZENSİZ","ACELEYLE","İHMAL","DÜZENSİZ","GELİŞİGÜZEL"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":179,"kelime":"GÖZ BOYAMAK","yasakli_kelimeler":["ALDATMAK","KANDIRMAK","GÖSTERİŞ","SAHTE","YANILTMAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":180,"kelime":"KAFA PATLATMAK","yasakli_kelimeler":["DÜŞÜNMEK","ZORLAMAK","ÇÖZMEK","YORMAK","UĞRAŞMAK"],"kategori":"Deyimler","zorluk":"Zor"},
+  {"id":181,"kelime":"ÖZGÜRLÜK","yasakli_kelimeler":["BAĞIMSIZLIK","SERBEST","HAK","KISITLAMA","ZİNCİR"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":182,"kelime":"ADALET","yasakli_kelimeler":["HAK","MAHKEME","EŞİTLİK","HUKUK","DOĞRU"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":183,"kelime":"SABIR","yasakli_kelimeler":["BEKLEMEK","DAYANMAK","SAKİN","ZAMAN","TAHAMMÜL"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":184,"kelime":"CESARET","yasakli_kelimeler":["KORKUSUZLUK","KAHRAMAN","RİSK","GÜÇ","YÜREKLİLİK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":185,"kelime":"UMUT","yasakli_kelimeler":["BEKLENTİ","İNANÇ","GELECEK","İYİMSERLİK","IŞIK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":186,"kelime":"KISKANÇLIK","yasakli_kelimeler":["HASET","REKABET","SEVGİLİ","SAHİPLENME","ÖFKE"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":187,"kelime":"GURUR","yasakli_kelimeler":["ONUR","KİBİR","BAŞARI","DEĞER","KENDİNİ BEĞENME"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":188,"kelime":"VİCDAN","yasakli_kelimeler":["SUÇLULUK","AHLAK","İÇ SES","DOĞRU","YANLIŞ"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":189,"kelime":"SADAKAT","yasakli_kelimeler":["BAĞLILIK","GÜVEN","VEFA","İHANET","SÖZÜNDE DURMAK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":190,"kelime":"BAĞIMLILIK","yasakli_kelimeler":["ALIŞKANLIK","KONTROL EDEMEME","MADDE","İHTİYAÇ","TUTKU"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":191,"kelime":"YALNIZLIK","yasakli_kelimeler":["TEK BAŞINA","KİMSESİZLİK","BOŞLUK","SESSİZLİK","İZOLE"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":192,"kelime":"MOTİVASYON","yasakli_kelimeler":["İSTEK","ŞEVK","HEDEF","ENERJİ","AZİM"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":193,"kelime":"EMPATİ","yasakli_kelimeler":["ANLAYIŞ","KENDİNİ YERİNE KOYMAK","DUYGU","HİSSETMEK","ŞEFKAT"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":194,"kelime":"HIRS","yasakli_kelimeler":["İSTEK","TUTKU","KAZANMA","AMAÇ","DOYMAMAK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":195,"kelime":"TEVAZU","yasakli_kelimeler":["ALÇAKGÖNÜLLÜLÜK","BASİT","GÖSTERİŞSİZ","SADE","KİBİRSİZ"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":196,"kelime":"DÜRÜSTLÜK","yasakli_kelimeler":["DOĞRU","YALAN SÖYLEMEMEK","SAMİMİ","GÜVEN","AÇIK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":197,"kelime":"ÖNSEZİ","yasakli_kelimeler":["SEZGİ","HİSSETMEK","TAHMİN","İÇGÜDÜ","FARK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":198,"kelime":"HAYAL KIRIKLIĞI","yasakli_kelimeler":["ÜZÜNTÜ","BEKLENTİ","BOŞA ÇIKMA","UMUTSUZLUK","DÜŞ"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":199,"kelime":"ÖZGÜVEN","yasakli_kelimeler":["KENDİNE İNANMA","CESARET","RAHATLIK","EMİN","KARARLILIK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":200,"kelime":"KARARSIZLIK","yasakli_kelimeler":["TEREDDÜT","SEÇİM","BOCALAMAK","İKİLEM","DÜŞÜNMEK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":201,"kelime":"MERAK","yasakli_kelimeler":["İLGİ","ÖĞRENMEK","SORU","BİLİNMEZLİK","ARAŞTIRMAK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":202,"kelime":"TAKINTI","yasakli_kelimeler":["SAPLANTI","SÜREKLİ","DÜŞÜNCE","ODAK","VAZGEÇEMEMEK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":203,"kelime":"HUZUR","yasakli_kelimeler":["SAKİNLİK","RAHATLIK","DİNGİNLİK","SESSİZLİK","BARIŞ"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":204,"kelime":"STRES","yasakli_kelimeler":["GERGİNLİK","BASKI","KAYGI","SİNİR","YORGUNLUK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":205,"kelime":"ÖZLEM","yasakli_kelimeler":["HASRET","UZAKLIK","ANI","İSTEK","GÖRMEK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":206,"kelime":"PİŞMANLIK","yasakli_kelimeler":["KEŞKE","HATA","ÜZÜNTÜ","GEÇMİŞ","SUÇLULUK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":207,"kelime":"MİNNETTARLIK","yasakli_kelimeler":["TEŞEKKÜR","DEĞER","ŞÜKÜR","BORÇLULUK","İYİLİK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":208,"kelime":"AFFETMEK","yasakli_kelimeler":["BAĞIŞLAMAK","HATA","KİN","BARIŞ","UNUTMAK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":209,"kelime":"İNTİKAM","yasakli_kelimeler":["ÖÇ","HINÇ","KİN","KARŞILIK","ÖFKE"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":210,"kelime":"ÖNYARGI","yasakli_kelimeler":["PEŞİN HÜKÜM","YANLIŞ","DÜŞÜNCE","ETİKETLEME","TARAFSIZ"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":211,"kelime":"SORUMLULUK","yasakli_kelimeler":["GÖREV","YÜKÜMLÜLÜK","BİLİNÇ","ÜSTLENMEK","YÜK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":212,"kelime":"KAYGI","yasakli_kelimeler":["ENDİŞE","TEDİRGİNLİK","KORKU","STRES","HUZURSUZLUK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":213,"kelime":"TÜKENMİŞLİK","yasakli_kelimeler":["YORGUNLUK","BIKKINLIK","ENERJİ","MOTİVASYONSUZLUK","BİTKİNLİK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":214,"kelime":"ÖZGÜNLÜK","yasakli_kelimeler":["FARKLILIK","TAKLİT","KOPYA","YARATICILIK","BENZERSİZ"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":215,"kelime":"TUTARLILIK","yasakli_kelimeler":["İSTİKRAR","DEĞİŞMEMEK","KARARLILIK","SÖZÜNDE DURMAK","DENGE"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":216,"kelime":"ESNEKLİK","yasakli_kelimeler":["UYUM","DEĞİŞİM","ADAPTE","KATI OLMAMA","KOLAYLIK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":217,"kelime":"FARKINDALIK","yasakli_kelimeler":["BİLİNÇ","DİKKAT","ANLAYIŞ","GÖRMEK","ALGI"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":218,"kelime":"HAYAL GÜCÜ","yasakli_kelimeler":["YARATICILIK","DÜŞÜNMEK","ZİHİN","FANTEZİ","KURGU"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":219,"kelime":"YARATICILIK","yasakli_kelimeler":["ÖZGÜNLÜK","FİKİR","SANAT","BULUŞ","HAYAL"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":220,"kelime":"TUTKU","yasakli_kelimeler":["İSTEK","SEVGİ","HIRS","COŞKU","BAĞLILIK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":221,"kelime":"DENGE","yasakli_kelimeler":["UYUM","ÖLÇÜ","ORTA","KARARLILIK","STABİLİTE"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":222,"kelime":"GÜVEN","yasakli_kelimeler":["İNANMAK","EMİN","İLİŞKİ","SADAKAT","ŞÜPHE"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":223,"kelime":"ŞÜPHE","yasakli_kelimeler":["KUŞKU","EMİN OLMAMA","GÜVENSİZLİK","SORU İŞARETİ","TEREDDÜT"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":224,"kelime":"KIYASLAMA","yasakli_kelimeler":["KARŞILAŞTIRMA","ORAN","FARKLAR","DEĞERLENDİRME","ÖLÇMEK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":225,"kelime":"ÖNEMSEME","yasakli_kelimeler":["İLGİ","DEĞER VERME","DİKKAT","SAHİPLENME","KAYGI"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":226,"kelime":"BAĞLILIK","yasakli_kelimeler":["SADAKAT","VEFA","İLİŞKİ","GÜVEN","SIKI"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":227,"kelime":"UYUM","yasakli_kelimeler":["DENGE","ANLAŞMA","BİRLİK","AHENK","BARIŞ"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":228,"kelime":"ÇATIŞMA","yasakli_kelimeler":["KAVGA","ANLAŞMAZLIK","GERGİNLİK","SAVAŞ","UYUMSUZLUK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":229,"kelime":"UZLAŞMA","yasakli_kelimeler":["ANLAŞMA","ORTAK NOKTA","ÇÖZÜM","BARIŞ","FİKİR"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":230,"kelime":"KARARLILIK","yasakli_kelimeler":["AZİM","İSTİKRAR","VAZGEÇMEMEK","DİRENÇ","SEBAT"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":231,"kelime":"AZİM","yasakli_kelimeler":["KARARLILIK","ÇABA","VAZGEÇMEMEK","HEDEF","DİRENÇ"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":232,"kelime":"İRADE","yasakli_kelimeler":["KARARLILIK","GÜÇ","KONTROL","İSTEK","DİRENÇ"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":233,"kelime":"SEZGİ","yasakli_kelimeler":["ÖNSEZİ","HİSSETMEK","İÇGÜDÜ","TAHMİN","FARK ETMEK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":234,"kelime":"BİLİNÇALTI","yasakli_kelimeler":["ZİHİN","FARKINDA OLMAMA","RÜYA","DERİN","DÜŞÜNCE"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":235,"kelime":"ÖZDENETİM","yasakli_kelimeler":["KONTROL","İRADE","KENDİNİ TUTMAK","DİSİPLİN","SINIR"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":236,"kelime":"DİSİPLİN","yasakli_kelimeler":["DÜZEN","KURAL","KENDİNİ KONTROL","PROGRAM","İSTİKRAR"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":237,"kelime":"ADAPTASYON","yasakli_kelimeler":["UYUM","DEĞİŞİM","ALIŞMAK","ESNEKLİK","ORTAM"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":238,"kelime":"REKABET","yasakli_kelimeler":["YARIŞ","KAZANMAK","KARŞILAŞTIRMA","MÜCADELE","RAKİP"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":239,"kelime":"İŞBİRLİĞİ","yasakli_kelimeler":["ORTAKLIK","BERABER","YARDIMLAŞMA","EKİP","DESTEK"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":240,"kelime":"ÖZERKLİK","yasakli_kelimeler":["BAĞIMSIZLIK","KENDİ KARARI","SERBESTLİK","KONTROL","OTONOM"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
+  {"id":241,"kelime":"ALIŞVERİŞ LİSTESİ","yasakli_kelimeler":["MARKET","YAZMAK","EKSİK","ALMAK","KAĞIT"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":242,"kelime":"ÇAMAŞIR YIKAMAK","yasakli_kelimeler":["MAKİNE","DETERJAN","KİRLİ","TEMİZ","KURUTMAK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":243,"kelime":"BULAŞIK YIKAMAK","yasakli_kelimeler":["TABAK","LAVABO","SÜNGER","DETERJAN","MUTFAK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":244,"kelime":"TOZ ALMAK","yasakli_kelimeler":["TEMİZLİK","BEZ","MOBİLYA","EV","KİR"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":245,"kelime":"ÇÖP ATMAK","yasakli_kelimeler":["POŞET","KOVA","DIŞARI","KOKU","ATIK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":246,"kelime":"SU FATURASI","yasakli_kelimeler":["ÖDEMEK","AY","SAYAÇ","MİKTAR","BORU"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":247,"kelime":"MARKETE GİTMEK","yasakli_kelimeler":["ALIŞVERİŞ","SEPET","KASA","ÜRÜN","PARA"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":248,"kelime":"TRAFİKTE KALMAK","yasakli_kelimeler":["ARABA","YOL","SIKIŞMAK","BEKLEMEK","YAVAŞ"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":249,"kelime":"OTOBÜS DURAĞI","yasakli_kelimeler":["BEKLEMEK","TOPLU TAŞIMA","YOLCU","KART","SIRA"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":250,"kelime":"İŞE GEÇ KALMAK","yasakli_kelimeler":["ZAMAN","UYANMAK","ERKEN","TOPLANTI","KOŞMAK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":251,"kelime":"SABAH KAHVALTISI","yasakli_kelimeler":["YEMEK","ÇAY","TABAK","MASA","EKMEK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":252,"kelime":"UYKU DÜZENİ","yasakli_kelimeler":["SAAT","YATMAK","ERKEN","DİNLENMEK","PROGRAM"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":253,"kelime":"ALARM KURMAK","yasakli_kelimeler":["SAAT","UYANMAK","SES","TELEFON","SABAH"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":254,"kelime":"DİŞ FIRÇALAMAK","yasakli_kelimeler":["MACUN","AĞIZ","BANYO","SABAH","KÖPÜK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":255,"kelime":"YATAK TOPLAMAK","yasakli_kelimeler":["YORGAN","DÜZENLİ","SABAH","ODA","ÇARŞAF"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":256,"kelime":"ÜTÜ YAPMAK","yasakli_kelimeler":["KIYAFET","SICAK","KIRIŞIK","DÜZELTMEK","MASA"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":257,"kelime":"FATURA ÖDEMEK","yasakli_kelimeler":["PARA","AY","BANKA","ELEKTRİK","BORÇ"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":258,"kelime":"RANDEVU ALMAK","yasakli_kelimeler":["DOKTOR","SAAT","BEKLEMEK","TELEFON","SIRA"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":259,"kelime":"TOPLU TAŞIMA","yasakli_kelimeler":["OTOBÜS","METRO","KART","YOLCU","ŞEHİR"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":260,"kelime":"TRAFİK IŞIĞI","yasakli_kelimeler":["KIRMIZI","YEŞİL","YOL","DURMAK","GEÇMEK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":261,"kelime":"YEMEK PİŞİRMEK","yasakli_kelimeler":["TENCERE","MUTFAK","OCAK","MALZEME","TARİF"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":262,"kelime":"SU İÇMEK","yasakli_kelimeler":["BARDAK","SUSAMAK","ŞİŞE","SAĞLIK","SERİNLEMEK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":263,"kelime":"KAHVE MOLASI","yasakli_kelimeler":["DİNLENMEK","İŞ","İÇMEK","ARA","FİNCAN"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":264,"kelime":"ÖĞLE ARASI","yasakli_kelimeler":["İŞ","YEMEK","DİNLENMEK","SAAT","MOLA"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":265,"kelime":"HAFTA SONU TATİLİ","yasakli_kelimeler":["DİNLENMEK","CUMARTESİ","PAZAR","İŞ","EV"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":266,"kelime":"GÜNLÜK RUTİN","yasakli_kelimeler":["ALIŞKANLIK","TEKRAR","PROGRAM","HER GÜN","DÜZEN"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":267,"kelime":"ERKEN KALKMAK","yasakli_kelimeler":["SABAH","UYKU","SAAT","ALARM","YORGUN"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":268,"kelime":"GEÇ YATMAK","yasakli_kelimeler":["UYKU","SAAT","GECE","YORGUNLUK","UYANMAK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":269,"kelime":"TOPLANTI","yasakli_kelimeler":["İŞ","KONUŞMAK","MASA","SUNUM","OFİS"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":270,"kelime":"TATİL PLANI","yasakli_kelimeler":["YER","GİTMEK","REZERVASYON","BİLET","GEZMEK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":271,"kelime":"PARK ETMEK","yasakli_kelimeler":["ARABA","YER","BULMAK","CADDE","DURMAK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":272,"kelime":"BENZİN ALMAK","yasakli_kelimeler":["ARABA","YAKIT","İSTASYON","DEPO","DOLDURMAK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":273,"kelime":"TRAFİK CEZASI","yasakli_kelimeler":["ARABA","POLİS","ÖDEMEK","HIZ","KURAL"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":274,"kelime":"ASANSÖR BEKLEMEK","yasakli_kelimeler":["KAT","BUTON","BİNA","KAPI","İNMEK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":275,"kelime":"MERDİVEN ÇIKMAK","yasakli_kelimeler":["KAT","YORULMAK","BASAMAK","YUKARI","BİNA"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":276,"kelime":"KAPICI","yasakli_kelimeler":["BİNA","ÇÖP","YARDIM","GÖREVLİ","KAPI"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":277,"kelime":"KOMŞU ZİYARETİ","yasakli_kelimeler":["EV","KAPI","ÇAY","SOHBET","MİSAFİRLİK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":278,"kelime":"MİSAFİR AĞIRLAMAK","yasakli_kelimeler":["EV","YEMEK","İKRAM","KONUK","SOHBET"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":279,"kelime":"ÇEYİZ HAZIRLAMAK","yasakli_kelimeler":["EV","EŞYA","EVLİLİK","SANDIK","BAVUL"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":280,"kelime":"EV TEMİZLİĞİ","yasakli_kelimeler":["SÜPÜRMEK","TOZ","BEZ","DÜZEN","PARLAK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":281,"kelime":"ÇAMAŞIR ASMAK","yasakli_kelimeler":["İP","MANDAL","KURUTMAK","BALKON","ISLAK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":282,"kelime":"YEMEK SİPARİŞİ","yasakli_kelimeler":["TELEFON","UYGULAMA","KURYE","RESTORAN","PAKET"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":283,"kelime":"KURYE BEKLEMEK","yasakli_kelimeler":["PAKET","KAPI","SİPARİŞ","TESLİMAT","ZİL"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":284,"kelime":"ELEKTRİK KESİNTİSİ","yasakli_kelimeler":["KARANLIK","MUM","ANİ","EV","BEKLEME"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":285,"kelime":"SU KESİNTİSİ","yasakli_kelimeler":["MUSLUK","EV","BEKLEME","DEPO","AKMAMAK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":286,"kelime":"GÜNDELİK KIYAFET","yasakli_kelimeler":["GİYİM","RAHAT","EV","BASİT","DOLAP"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":287,"kelime":"ÇAMAŞIR MAKİNESİ","yasakli_kelimeler":["DETERJAN","KİRLİ","YIKAMAK","PROGRAM","KURUTMAK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":288,"kelime":"BULAŞIK MAKİNESİ","yasakli_kelimeler":["TABAK","YIKAMAK","MUTFAK","DETERJAN","PROGRAM"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":289,"kelime":"SÜPERMARKET KUYRUĞU","yasakli_kelimeler":["KASA","BEKLEMEK","SIRA","ÜRÜN","ALIŞVERİŞ"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":290,"kelime":"İNDİRİM GÜNÜ","yasakli_kelimeler":["MARKET","UCUZ","FİYAT","KAMPANYA","ALIŞVERİŞ"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":291,"kelime":"ETİKET FİYATI","yasakli_kelimeler":["ÜRÜN","MARKET","PARA","YAZI","DEĞER"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":292,"kelime":"TATİL VALİZİ","yasakli_kelimeler":["BAVUL","EŞYA","TOPLAMAK","GİTMEK","SEYAHAT"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":293,"kelime":"UÇAK BİLETİ","yasakli_kelimeler":["SEYAHAT","HAVALİMANI","REZERVASYON","PİLOT","YOLCULUK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":294,"kelime":"HAVALİMANI BEKLEMESİ","yasakli_kelimeler":["UÇAK","VALİZ","KAPI","YOLCU","GECİKME"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":295,"kelime":"TREN GARI","yasakli_kelimeler":["PERON","BİLET","YOLCU","RAY","BEKLEMEK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":296,"kelime":"OKUL SERVİSİ","yasakli_kelimeler":["ÖĞRENCİ","ARAÇ","SABAH","TAŞIMAK","ŞOFÖR"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":297,"kelime":"ÖDEV YAPMAK","yasakli_kelimeler":["OKUL","DEFTER","ÖĞRENCİ","DERS","YAZMAK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":298,"kelime":"SINAVA GİRMEK","yasakli_kelimeler":["OKUL","KAĞIT","SORU","CEVAP","STRES"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":299,"kelime":"DERS ÇALIŞMAK","yasakli_kelimeler":["KİTAP","SINAV","OKUL","ÖĞRENMEK","MASA"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":300,"kelime":"TATİL DÖNÜŞÜ","yasakli_kelimeler":["EVE","YORGUNLUK","VALİZ","BİTMEK","SEYAHAT"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
+  {"id":301,"kelime":"PENALTI","yasakli_kelimeler":["FUTBOL","KALECİ","VURUŞ","CEZA SAHASI","TOP"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":302,"kelime":"OFSAYT","yasakli_kelimeler":["FUTBOL","KURAL","HAKEM","POZİSYON","BAYRAK"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":303,"kelime":"KIRMIZI KART","yasakli_kelimeler":["HAKEM","FAUL","OYUNCU","CEZA","FUTBOL"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":304,"kelime":"SARI KART","yasakli_kelimeler":["HAKEM","UYARI","FAUL","FUTBOL","OYUNCU"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":305,"kelime":"MAÇ ÖNCESİ ISINMA","yasakli_kelimeler":["ANTRENMAN","SPOR","KAS","HAZIRLIK","SAHA"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":306,"kelime":"TARAFTAR TEZAHÜRATI","yasakli_kelimeler":["STADYUM","BAĞIRMAK","DESTEK","ŞARKI","TAKIM"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":307,"kelime":"ŞAMPİYONLUK KUPASI","yasakli_kelimeler":["KAZANMAK","TAKIM","ÖDÜL","FİNAL","ZAFER"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":308,"kelime":"SAKATLIK GEÇİRMEK","yasakli_kelimeler":["SPORCU","YARALANMAK","KAS","AĞRI","OYUN DIŞI"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":309,"kelime":"ANTRENMAN PROGRAMI","yasakli_kelimeler":["SPOR","ÇALIŞMAK","KAS","EGZERSİZ","KOÇ"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":310,"kelime":"TAKIM KAPTANI","yasakli_kelimeler":["FUTBOL","KOLLUK","LİDER","OYUNCU","PAZUBANT"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":311,"kelime":"DEPLASMAN MAÇI","yasakli_kelimeler":["FUTBOL","TAKIM","ŞEHİR","DIŞARIDA","RAKİP"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":312,"kelime":"KRAMPON","yasakli_kelimeler":["AYAKKABI","FUTBOL","ÇİM","SAHA","AYAK"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":313,"kelime":"BASKETBOL POTASI","yasakli_kelimeler":["TOP","SKOR","SAHA","ATIŞ","ÇEMBER"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":314,"kelime":"SMAÇ","yasakli_kelimeler":["BASKETBOL","POTA","SIÇRAMAK","TOP","ÇEMBER"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":315,"kelime":"SERVİS ATMAK","yasakli_kelimeler":["TOP","VURUŞ","OYUN","BAŞLANGIÇ","RAKET"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":316,"kelime":"SET SAYISI","yasakli_kelimeler":["VOLEYBOL","TENİS","OYUN","KAZANMAK","PUAN"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":317,"kelime":"MARATON KOŞUSU","yasakli_kelimeler":["UZUN","NEFES","YORULMAK","KİLOMETRE","YARIŞ"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":318,"kelime":"YÜZME YARIŞI","yasakli_kelimeler":["HAVUZ","SU","KULAÇ","HIZ","KÜREK"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":319,"kelime":"ANTRENÖR TALİMATI","yasakli_kelimeler":["SPOR","KOÇ","TAKIM","YÖNLENDİRMEK","SES"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":320,"kelime":"HAKEM DÜDÜĞÜ","yasakli_kelimeler":["MAÇ","SES","DURDURMAK","FAUL","SAHA"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":321,"kelime":"ŞUT ÇEKMEK","yasakli_kelimeler":["FUTBOL","TOP","KALE","VURUŞ","GOL"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":322,"kelime":"GOL SEVİNCİ","yasakli_kelimeler":["FUTBOL","KUTLAMA","OYUNCU","KOŞMAK","SAHNE"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":323,"kelime":"KALE DİREĞİ","yasakli_kelimeler":["FUTBOL","TOP","KALECİ","ÇARPMAK","METAL"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":324,"kelime":"STADYUM ATMOSFERİ","yasakli_kelimeler":["TARAFTAR","SES","MAÇ","COŞKU","TRİBÜN"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":325,"kelime":"FUTBOL TRANSFERİ","yasakli_kelimeler":["OYUNCU","TAKIM","PARA","İMZA","KULÜP"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":326,"kelime":"LİG SIRALAMASI","yasakli_kelimeler":["PUAN","TAKIM","SEZON","TABLO","ŞAMPİYONLUK"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":327,"kelime":"UZATMA DAKİKALARI","yasakli_kelimeler":["MAÇ","SÜRE","HAKEM","GOL","EK"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":328,"kelime":"PENALTI ATIŞLARI","yasakli_kelimeler":["KALECİ","VURUŞ","BERABERLİK","SERİ","GOL"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":329,"kelime":"BOKS RİNGİ","yasakli_kelimeler":["YUMRUK","DÖVÜŞ","SPORCU","KEMER","HAKEM"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":330,"kelime":"GÜREŞ MİNDERİ","yasakli_kelimeler":["SPORCU","YAĞ","PEHLİVAN","TUTMAK","YENMEK"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":331,"kelime":"HALTER KALDIRMAK","yasakli_kelimeler":["AĞIRLIK","KAS","SPOR","SALON","GÜÇ"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":332,"kelime":"FİTNESS SALONU","yasakli_kelimeler":["KAS","EGZERSİZ","ALET","SPOR","TER"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":333,"kelime":"KOŞU BANDI","yasakli_kelimeler":["SALON","HIZ","SPOR","ALET","TER"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":334,"kelime":"PİLATES DERSİ","yasakli_kelimeler":["EGZERSİZ","VÜCUT","SALON","ESNEME","NEFES"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":335,"kelime":"YOGA POZU","yasakli_kelimeler":["ESNEME","NEFES","DENGE","VÜCUT","SAKİNLİK"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":336,"kelime":"BİSİKLET TURU","yasakli_kelimeler":["PEDAL","YOL","İKİ TEKER","SÜRMEK","EGZERSİZ"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":337,"kelime":"TENİS KORTU","yasakli_kelimeler":["RAKET","TOP","FİLELER","SAHA","VURUŞ"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":338,"kelime":"MASA TENİSİ","yasakli_kelimeler":["RAKET","TOP","FİLELER","VURUŞ","KÜÇÜK"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":339,"kelime":"OKÇULUK","yasakli_kelimeler":["YAY","HEDEF","NİŞAN","ATMAK","KİRİŞ"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":340,"kelime":"ESKRİM","yasakli_kelimeler":["KILIÇ","MASKE","DÜELLO","VURUŞ","SPORCU"],"kategori":"Spor","zorluk":"Orta"},
+  {"id":341,"kelime":"MENEMEN","yasakli_kelimeler":["YUMURTA","DOMATES","BİBER","KAHVALTI","TAVA"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":342,"kelime":"LAHMACUN","yasakli_kelimeler":["HAMUR","KIYMA","İNCE","FIRIN","RULO"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":343,"kelime":"BAKLAVA","yasakli_kelimeler":["ŞERBET","FISTIK","TATLI","YUFKA","FIRIN"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":344,"kelime":"KAHVALTI TABAĞI","yasakli_kelimeler":["PEYNİR","ZEYTİN","EKMEK","REÇEL","SABAH"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":345,"kelime":"ÇİĞ KÖFTE","yasakli_kelimeler":["BULGUR","BAHARAT","YOĞURMA","EL","YUFKA"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":346,"kelime":"MANTI","yasakli_kelimeler":["HAMUR","YOĞURT","SARIMSAK","KIYMA","KÜÇÜK"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":347,"kelime":"İSKENDER","yasakli_kelimeler":["DÖNER","TEREYAĞ","YOĞURT","DOMATES","EKMEK"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":348,"kelime":"SİMİT","yasakli_kelimeler":["SUSAM","HALKA","FIRIN","ÇAY","SOKAK"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":349,"kelime":"AYRAN","yasakli_kelimeler":["YOĞURT","SU","TUZ","İÇECEK","SOĞUK"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":350,"kelime":"TURŞU","yasakli_kelimeler":["SİRKE","KAVANOZ","EKŞİ","SEBZE","SALAMURA"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":351,"kelime":"PİDE","yasakli_kelimeler":["FIRIN","HAMUR","KIYMA","PEYNİR","UZUN"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":352,"kelime":"KEBAP","yasakli_kelimeler":["ŞİŞ","ET","MANGAL","KÖZLEMEK","BAHARAT"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":353,"kelime":"DÖNER","yasakli_kelimeler":["ET","EKMEK","ŞİŞ","TEZGAH","KESMEK"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":354,"kelime":"TAVUK IZGARA","yasakli_kelimeler":["MANGAL","ET","BAHARAT","KÖZLEMEK","KIZARMIŞ"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":355,"kelime":"BALIK EKMEK","yasakli_kelimeler":["SANDVİÇ","LİMON","SOĞAN","TEKNE","DENİZ"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":356,"kelime":"PİLAV","yasakli_kelimeler":["PİRİNÇ","TEREYAĞ","TENCERE","YEMEK","YANINDA"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":357,"kelime":"MERCİMEK ÇORBASI","yasakli_kelimeler":["KIRMIZI","KAŞIK","SICAK","TENCERE","BAHARAT"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":358,"kelime":"YAYLA ÇORBASI","yasakli_kelimeler":["YOĞURT","NANE","SICAK","KAŞIK","UN"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":359,"kelime":"KURU FASULYE","yasakli_kelimeler":["TENCERE","PİLAV","ET","YEMEK","SOS"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":360,"kelime":"KADAYIF","yasakli_kelimeler":["TEL","ŞERBET","TATLI","FIRIN","FISTIK"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":361,"kelime":"SÜTLAÇ","yasakli_kelimeler":["PİRİNÇ","TATLI","FIRIN","KASE","TARÇIN"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":362,"kelime":"AŞURE","yasakli_kelimeler":["TAHIL","TATLI","KASE","KURUYEMİŞ","KARIŞIM"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":363,"kelime":"ZEYTİNYAĞLI YAPRAK SARMASI","yasakli_kelimeler":["ASMA","PİRİNÇ","SARMAK","DOLMA","İNCE"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":364,"kelime":"HAMSİ TAVA","yasakli_kelimeler":["BALIK","KIZARTMA","MISIR UNU","YAĞ","DENİZ"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":365,"kelime":"KUMPİR","yasakli_kelimeler":["PATATES","FIRIN","MALZEME","DOLDURMAK","SOKAK"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":366,"kelime":"GÖZLEME","yasakli_kelimeler":["YUFKA","PEYNİR","SAC","İNCE","KATLAMAK"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":367,"kelime":"BÖREK","yasakli_kelimeler":["YUFKA","PEYNİR","FIRIN","KATMAN","HAMUR"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":368,"kelime":"ÇORBA İÇMEK","yasakli_kelimeler":["KAŞIK","SICAK","TABAK","TUZ","İLK"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":369,"kelime":"PROFİTEROL","yasakli_kelimeler":["KREMA","ÇİKOLATA","HAMUR","TATLI","TOP"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":370,"kelime":"MEZE TABAĞI","yasakli_kelimeler":["ZEYTİN","KÜÇÜK","ÇEŞİT","BAŞLANGIÇ","SOFRA"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":371,"kelime":"KAHVE FALI","yasakli_kelimeler":["FİNCAN","TABAK","GELECEK","BAKMAK","TELVE"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":372,"kelime":"TÜRK KAHVESİ","yasakli_kelimeler":["FİNCAN","KÖPÜK","CEZVE","ŞEKER","TELVE"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":373,"kelime":"ÇAY BARDAĞI","yasakli_kelimeler":["İNCE BELLİ","SICAK","DEMLİK","ŞEKER","İÇMEK"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":374,"kelime":"LOKUM","yasakli_kelimeler":["ŞEKER","NİŞASTA","KÜÇÜK","KUTU","TATLI"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":375,"kelime":"HELVA","yasakli_kelimeler":["UN","ŞEKER","TAHİN","TATLI","TENCERE"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":376,"kelime":"SALEP","yasakli_kelimeler":["SICAK","TARÇIN","SÜT","KIŞ","İÇECEK"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":377,"kelime":"TOST MAKİNESİ","yasakli_kelimeler":["EKMEK","PEYNİR","KIZARTMA","SANDVİÇ","SICAK"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":378,"kelime":"PİZZA DİLİMİ","yasakli_kelimeler":["HAMUR","PEYNİR","FIRIN","İTALYAN","SOS"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":379,"kelime":"HAMBURGER","yasakli_kelimeler":["EKMEK","KÖFTE","PEYNİR","SOS","KETÇAP"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":380,"kelime":"DONDURMA KONİSİ","yasakli_kelimeler":["KÜLAH","SOĞUK","YAZ","TOP","VANİLYA"],"kategori":"Yemek","zorluk":"Kolay"},
+  {"id":381,"kelime":"DİŞ HEKİMİ","yasakli_kelimeler":["MUAYENE","AĞIZ","KLİNİK","HASTANE","FIRÇA"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":382,"kelime":"AŞÇI","yasakli_kelimeler":["MUTFAK","YEMEK","PİŞİRMEK","TENCERE","RESTORAN"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":383,"kelime":"BERBER","yasakli_kelimeler":["SAÇ","MAKAS","TIRAŞ","SALON","AYNA"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":384,"kelime":"TERZİ","yasakli_kelimeler":["KUMAŞ","DİKİŞ","MAKAS","ELBİSE","İĞNE"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":385,"kelime":"ECZACI","yasakli_kelimeler":["İLAÇ","REÇETE","KUTU","DOKTOR","RAF"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":386,"kelime":"MİMAR","yasakli_kelimeler":["BİNA","ÇİZİM","PLAN","İNŞAAT","TASARIM"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":387,"kelime":"MÜHENDİS","yasakli_kelimeler":["HESAP","PROJE","TEKNİK","PLAN","YAPI"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":388,"kelime":"PİLOT","yasakli_kelimeler":["UÇAK","KOKPİT","UÇMAK","GÖKYÜZÜ","YOLCU"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":389,"kelime":"HEMŞİRE","yasakli_kelimeler":["HASTANE","İĞNE","DOKTOR","BAKIM","BEYAZ"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":390,"kelime":"VETERİNER","yasakli_kelimeler":["HAYVAN","MUAYENE","KLİNİK","TEDAVİ","AŞI"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":391,"kelime":"AVUKAT","yasakli_kelimeler":["MAHKEME","DAVA","HUKUK","SAVUNMA","YASA"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":392,"kelime":"HAKİM","yasakli_kelimeler":["MAHKEME","KARAR","ADALET","DAVA","YASA"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":393,"kelime":"POLİS MEMURU","yasakli_kelimeler":["ÜNİFORMA","KANUN","SUÇ","DEVRİYE","DÜDÜK"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":394,"kelime":"İTFAİYECİ","yasakli_kelimeler":["YANGIN","HORTUM","KAMYON","SÖNDÜRMEK","ALEV"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":395,"kelime":"ÖĞRETMEN","yasakli_kelimeler":["OKUL","DERS","TAHTA","ÖĞRENCİ","SINIF"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":396,"kelime":"MUHASEBECİ","yasakli_kelimeler":["HESAP","PARA","ŞİRKET","FATURA","RAPOR"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":397,"kelime":"GAZETECİ","yasakli_kelimeler":["HABER","YAZMAK","RÖPORTAJ","BASIN","KAMERA"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":398,"kelime":"FOTOĞRAFÇI","yasakli_kelimeler":["KAMERA","POZ","ÇEKİM","IŞIK","OBJEKTİF"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":399,"kelime":"GRAFİK TASARIMCI","yasakli_kelimeler":["BİLGİSAYAR","RENK","GÖRSEL","PROGRAM","LOGO"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":400,"kelime":"YAZILIMCI","yasakli_kelimeler":["KOD","BİLGİSAYAR","PROGRAM","GELİŞTİRMEK","EKRAN"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":401,"kelime":"ELEKTRİKÇİ","yasakli_kelimeler":["KABLO","TAMİR","SİGORTA","PRİZ","TORNAVİDA"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":402,"kelime":"TESİSATÇI","yasakli_kelimeler":["SU","BORU","TAMİR","MUSLUK","TIKANIKLIK"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":403,"kelime":"KUAFÖR","yasakli_kelimeler":["SAÇ","SALON","FÖN","BOYA","MAKAS"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":404,"kelime":"ŞOFÖR","yasakli_kelimeler":["ARAÇ","DİREKSİYON","YOL","SÜRMEK","YOLCU"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":405,"kelime":"PASTA ŞEFİ","yasakli_kelimeler":["FIRIN","KREMA","TATLI","HAMUR","SÜSLEME"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":406,"kelime":"ÇİFTÇİ","yasakli_kelimeler":["TOPRAK","TARLA","EKİN","HASAT","TRAKTÖR"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":407,"kelime":"BALIKÇI","yasakli_kelimeler":["DENİZ","AĞ","OLTA","TEKNE","LİMAN"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":408,"kelime":"MARANGOZ","yasakli_kelimeler":["AHŞAP","TESTERE","ÇEKİÇ","TAHTA","MOBİLYA"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":409,"kelime":"HEYKELTIRAŞ","yasakli_kelimeler":["TAŞ","YONTMAK","SANAT","ŞEKİL","ESER"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":410,"kelime":"ARKEOLOG","yasakli_kelimeler":["KAZI","TARİH","ESER","TOPRAK","ANTİK"],"kategori":"Meslekler","zorluk":"Kolay"},
+  {"id":411,"kelime":"ZÜRAFA","yasakli_kelimeler":["UZUN BOYUN","AFRİKA","LEKE","YAPRAK","SAVAN"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":412,"kelime":"PENGUEN","yasakli_kelimeler":["KUTUP","YÜRÜYÜŞ","BUZ","BALIK","SİYAH BEYAZ"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":413,"kelime":"KANGURU","yasakli_kelimeler":["AVUSTRALYA","TORBA","ZIPLAMAK","KUYRUK","YAVRU"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":414,"kelime":"TİMSAH","yasakli_kelimeler":["NEHİR","DİŞ","SÜRÜNGEN","BATAKLIK","KUYRUK"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":415,"kelime":"YUNUS","yasakli_kelimeler":["DENİZ","ZEKİ","YÜZMEK","SIÇRAMAK","SUDA"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":416,"kelime":"AHTAPOT","yasakli_kelimeler":["DENİZ","KOL","MÜREKKEP","SUDA","SEKİZ"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":417,"kelime":"KELEBEK","yasakli_kelimeler":["KANAT","UÇMAK","RENKLİ","ÇİÇEK","TIRTIL"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":418,"kelime":"BAYKUŞ","yasakli_kelimeler":["GECE","KUŞ","ÖTMEK","AĞAÇ","SES"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":419,"kelime":"TAVUS KUŞU","yasakli_kelimeler":["TÜY","RENKLİ","KUYRUK","AÇMAK","GÖRKEMLİ"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":420,"kelime":"ARI","yasakli_kelimeler":["BAL","KOVAN","VIZILDAMAK","İĞNE","ÇİÇEK"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":421,"kelime":"KARINCA","yasakli_kelimeler":["YUVA","KÜÇÜK","ÇALIŞKAN","KOLONİ","TAŞIMAK"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":422,"kelime":"ÖRÜMCEK","yasakli_kelimeler":["AĞ","SEKİZ BACAK","BÖCEK","ZEHİR","KÖŞE"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":423,"kelime":"YARASA","yasakli_kelimeler":["GECE","UÇMAK","MAĞARA","TERS","KANAT"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":424,"kelime":"FİL","yasakli_kelimeler":["HORTUM","BÜYÜK","AFRİKA","KULAK","DİŞ"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":425,"kelime":"ASLAN","yasakli_kelimeler":["YELE","KRAL","SAVAN","KÜKREMEK","AVLANMAK"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":426,"kelime":"KAPLAN","yasakli_kelimeler":["ÇİZGİLİ","TURUNCU","ORMAN","PENÇE","AVCI"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":427,"kelime":"ZEBRA","yasakli_kelimeler":["ÇİZGİLİ","SİYAH BEYAZ","AFRİKA","AT","SAVAN"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":428,"kelime":"KOALA","yasakli_kelimeler":["AVUSTRALYA","OKALİPTÜS","AĞAÇ","TEMBEL","TORBA"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":429,"kelime":"PANDA","yasakli_kelimeler":["SİYAH BEYAZ","BAMBU","ÇİN","AYI","TEMBEL"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":430,"kelime":"TAVŞAN","yasakli_kelimeler":["KULAK","HAVUÇ","ZIPLAMAK","YUMUŞAK","YUVA"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":431,"kelime":"KURBAĞA","yasakli_kelimeler":["SU","ZIPLAMAK","YEŞİL","NİLÜFER","VIRAKLAMAK"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":432,"kelime":"YENGEÇ","yasakli_kelimeler":["DENİZ","KISKAÇ","YAN YAN","KABUK","KUM"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":433,"kelime":"İSTAKOZ","yasakli_kelimeler":["DENİZ","KABUK","KISKAÇ","KIRMIZI","YEMEK"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":434,"kelime":"DENİZ ATI","yasakli_kelimeler":["OKYANUS","KÜÇÜK","KUYRUK","YÜZMEK","ŞEKİL"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":435,"kelime":"GERGEDAN","yasakli_kelimeler":["BOYNUZ","KALIN DERİ","AFRİKA","BÜYÜK","SAVAN"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":436,"kelime":"SU AYGIRI","yasakli_kelimeler":["NEHİR","BÜYÜK","AĞIZ","BATAKLIK","AFRİKA"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":437,"kelime":"ÇAKAL","yasakli_kelimeler":["ULUMA","GECE","VAHŞİ","SÜRÜ","ORMAN"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":438,"kelime":"TİLKİ","yasakli_kelimeler":["KURNAZ","TURUNCU","KUYRUK","ORMAN","TAVUK"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":439,"kelime":"KUNDUZ","yasakli_kelimeler":["BARAJ","AĞAÇ","KESMEK","NEHİR","KUYRUK"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":440,"kelime":"GEYİK","yasakli_kelimeler":["BOYNUZ","ORMAN","KOŞMAK","AVLANMAK","YAPRAK"],"kategori":"Hayvanlar","zorluk":"Kolay"},
+  {"id":441,"kelime":"HASHTAG","yasakli_kelimeler":["KARE","İŞARET","TWİTTER","KONU","PAYLAŞIM"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":442,"kelime":"DM ATMAK","yasakli_kelimeler":["MESAJ","ÖZEL","SOSYAL MEDYA","YAZMAK","KONUŞMA"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":443,"kelime":"ANLIK PAYLAŞIM","yasakli_kelimeler":["INSTAGRAM","FOTOĞRAF","KAYBOLAN","SOSYAL MEDYA","GÜN"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":444,"kelime":"HESABI ENGELLEMEK","yasakli_kelimeler":["SOSYAL MEDYA","GÖRMEMEK","KAPATMAK","KULLANICI","İLETİŞİM"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":445,"kelime":"TAKİPTEN ÇIKMAK","yasakli_kelimeler":["SOSYAL MEDYA","HESAP","BIRAKMAK","PROFİL","GÖRMEK"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":446,"kelime":"SAHTE HESAP","yasakli_kelimeler":["PROFİL","GERÇEK OLMAYAN","KİMLİK","SOSYAL MEDYA","KOPYA"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":447,"kelime":"YORUM YAPMAK","yasakli_kelimeler":["PAYLAŞIM","SOSYAL MEDYA","YAZMAK","ALTINA","TEPKİ"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":448,"kelime":"PAYLAŞIM YAPMAK","yasakli_kelimeler":["SOSYAL MEDYA","FOTOĞRAF","HESAP","GÖNDERMEK","HERKES"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":449,"kelime":"ONLINE OLMAK","yasakli_kelimeler":["İNTERNET","BAĞLI","HESAP","AKTİF","MESAJ"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":450,"kelime":"GÖRÜNMEZ MOD","yasakli_kelimeler":["UYGULAMA","GİZLİ","AKTİF","MESAJ","DURUM"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":451,"kelime":"KEŞFET SAYFASI","yasakli_kelimeler":["INSTAGRAM","ALGORİTMA","POPÜLER","İÇERİK","UYGULAMA"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":452,"kelime":"PROFİL FOTOĞRAFI","yasakli_kelimeler":["SOSYAL MEDYA","YÜZ","HESAP","RESİM","DEĞİŞTİRMEK"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":453,"kelime":"GRUP SOHBETİ","yasakli_kelimeler":["MESAJ","BİRDEN FAZLA","TELEFON","YAZIŞMA","KATILIMCI"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":454,"kelime":"SESLİ MESAJ","yasakli_kelimeler":["KAYIT","TELEFON","DİNLEMEK","KONUŞMA","GÖNDERME"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":455,"kelime":"EKRAN PAYLAŞIMI","yasakli_kelimeler":["TOPLANTI","GÖRÜNTÜ","BİLGİSAYAR","GÖSTERMEK","UYGULAMA"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":456,"kelime":"VİDEO KONFERANS","yasakli_kelimeler":["TOPLANTI","KAMERA","EKRAN","UZAKTAN","KATILIMCI"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":457,"kelime":"İNTERNET BAĞIMLILIĞI","yasakli_kelimeler":["TELEFON","SÜREKLİ","KONTROL EDEMEME","EKRAN","ZAMAN"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":458,"kelime":"KAPAK FOTOĞRAFI","yasakli_kelimeler":["SOSYAL MEDYA","HESAP","PROFİL","DEĞİŞTİRMEK","GÖRSEL"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":459,"kelime":"GİZLİLİK AYARLARI","yasakli_kelimeler":["HESAP","PROFİL","KISITLAMA","UYGULAMA","GÖRÜNÜRLÜK"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":460,"kelime":"BİLDİRİM KAPATMAK","yasakli_kelimeler":["TELEFON","SESSİZ","UYARI","UYGULAMA","EKRAN"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":461,"kelime":"ETKİLEŞİM ALMAK","yasakli_kelimeler":["BEĞENİ","YORUM","PAYLAŞIM","SOSYAL MEDYA","POPÜLER"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":462,"kelime":"HESAP AÇMAK","yasakli_kelimeler":["KAYIT","PROFİL","ŞİFRE","KULLANICI ADI","UYGULAMA"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":463,"kelime":"KULLANICI ADI","yasakli_kelimeler":["HESAP","PROFİL","SEÇMEK","SOSYAL MEDYA","İSİM"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":464,"kelime":"ŞİFREMİ UNUTTUM","yasakli_kelimeler":["HESAP","SIFIRLAMA","GİRİŞ","MAİL","KOD"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":465,"kelime":"UYGULAMA İNDİRMEK","yasakli_kelimeler":["TELEFON","MAĞAZA","YÜKLEMEK","PROGRAM","KURMAK"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":466,"kelime":"BAĞLANTI PAYLAŞMAK","yasakli_kelimeler":["ADRES","SOSYAL MEDYA","GÖNDERME","SİTE","TIKLAMA"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":467,"kelime":"EKRANDA GEZİNMEK","yasakli_kelimeler":["TELEFON","AŞAĞI","KAYDIRMAK","PARMAK","SOSYAL MEDYA"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":468,"kelime":"SESSİZE ALMAK","yasakli_kelimeler":["BİLDİRİM","TELEFON","KAPATMAK","MESAJ","RAHATSIZ"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":469,"kelime":"ÇEVRİMİÇİ ARKADAŞ","yasakli_kelimeler":["İNTERNET","TANIŞMAK","OYUN","SOSYAL MEDYA","SANAL"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":470,"kelime":"İÇERİK ÜRETİCİSİ","yasakli_kelimeler":["VİDEO","PAYLAŞIM","SOSYAL MEDYA","TAKİPÇİ","KANAL"],"kategori":"Sosyal Medya","zorluk":"Orta"},
+  {"id":471,"kelime":"KONSER","yasakli_kelimeler":["SAHNE","ŞARKICI","BİLET","IŞIK","KALABALIK"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":472,"kelime":"GİTAR","yasakli_kelimeler":["TEL","ÇALMAK","MÜZİK ALETİ","AKOR","PARMAK"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":473,"kelime":"PİYANO","yasakli_kelimeler":["TUŞ","ÇALMAK","MÜZİK ALETİ","NOTA","PEDAL"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":474,"kelime":"DAVUL","yasakli_kelimeler":["VURMAK","RİTİM","BAGET","MÜZİK ALETİ","SES"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":475,"kelime":"KEMAN","yasakli_kelimeler":["YAY","TEL","ÇALMAK","MÜZİK ALETİ","ÇENE"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":476,"kelime":"BAĞLAMA","yasakli_kelimeler":["TEL","MIZRAP","TÜRK","ÇALMAK","MÜZİK ALETİ"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":477,"kelime":"MELODİ","yasakli_kelimeler":["EZGİ","SES","ŞARKI","MÜZİK","NOTA"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":478,"kelime":"RİTİM","yasakli_kelimeler":["TEMPO","VURUŞ","MÜZİK","DANS","DAVUL"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":479,"kelime":"BESTECİ","yasakli_kelimeler":["MÜZİK","YAZMAK","NOTA","ŞARKI","SANATÇI"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":480,"kelime":"SÖZ YAZARI","yasakli_kelimeler":["ŞARKI","KELİME","MELODİ","ANLAM","NAKARAT"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":481,"kelime":"ORKESTRA","yasakli_kelimeler":["MÜZİK","ŞEF","ENSTRÜMAN","SALON","TOPLULUK"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":482,"kelime":"KORO","yasakli_kelimeler":["ŞARKI","GRUP","SES","BİRLİKTE","SÖYLEMEK"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":483,"kelime":"KULAKLIK","yasakli_kelimeler":["MÜZİK","TAKMAK","DİNLEMEK","SES","KABLO"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":484,"kelime":"ÇALGI","yasakli_kelimeler":["ENSTRÜMAN","MÜZİK","SES","NOTA","ALET"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":485,"kelime":"NOTA","yasakli_kelimeler":["MÜZİK","YAZI","SES","PERDE","BESTE"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":486,"kelime":"AKOR","yasakli_kelimeler":["GİTAR","MÜZİK","NOTA","ÇALMAK","PARMAK"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":487,"kelime":"TURNE","yasakli_kelimeler":["KONSER","ŞEHİR","SAHNE","ŞARKICI","GEZMEK"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":488,"kelime":"STÜDYO KAYDI","yasakli_kelimeler":["MÜZİK","SES","PRODÜKTÖR","ŞARKICI","MİKROFON"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":489,"kelime":"MİKROFON","yasakli_kelimeler":["SES","KONSER","SAHNE","ŞARKICI","KONUŞMAK"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":490,"kelime":"PLAK","yasakli_kelimeler":["MÜZİK","ESKİ","DÖNER","SES","VİNİL"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":491,"kelime":"DJ","yasakli_kelimeler":["MÜZİK","KARIŞTIRMAK","KULÜP","SES","PLAK"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":492,"kelime":"AKUSTİK","yasakli_kelimeler":["GİTAR","SES","YALIN","MÜZİK","SAHNE"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":493,"kelime":"DÜET","yasakli_kelimeler":["İKİ KİŞİ","ŞARKI","BİRLİKTE","SÖYLEMEK","SAHNE"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":494,"kelime":"SOLİST","yasakli_kelimeler":["ŞARKICI","GRUP","SES","SAHNE","BAŞ"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":495,"kelime":"NOTA DEFTERİ","yasakli_kelimeler":["MÜZİK","BESTE","YAZMAK","KAĞIT","ÇİZGİ"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":496,"kelime":"MÜZİK FESTİVALİ","yasakli_kelimeler":["SAHNE","SANATÇI","KALABALIK","ALAN","KONSER"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":497,"kelime":"ZİL SESİ","yasakli_kelimeler":["TELEFON","MÜZİK","ÇALMAK","ARAMA","MELODİ"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":498,"kelime":"BEATBOX","yasakli_kelimeler":["AĞIZ","SES","RİTİM","MÜZİK","TAKLİT"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":499,"kelime":"OPERA","yasakli_kelimeler":["SAHNE","ŞARKI","SES","TİYATRO","KLASİK"],"kategori":"Müzik","zorluk":"Orta"},
+  {"id":500,"kelime":"MARŞ","yasakli_kelimeler":["MÜZİK","ULUSAL","SÖYLEMEK","TÖREN","RİTİM"],"kategori":"Müzik","zorluk":"Orta"}
+];
+
+    // 🔊 ÇEVRİMDIŞI WEB AUDIO API SES SENTEZLEYİCİ
+    class SoundFX {
+      constructor() {
+        this.ctx = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playTone(freq, type = 'sine', duration = 0.1, gainVal = 0.1) {
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch(e){}
+      }
+
+      playCountdownTick() {
+        this.playTone(700, 'sine', 0.08, 0.12);
+      }
+
+      playStartChime() {
+        if (!this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => {
+            this.playTone(freq, 'triangle', 0.25, 0.15);
+          }, idx * 70);
+        });
+      }
+
+      playCorrect() {
+        if (!this.ctx) return;
+        this.playTone(523.25, 'sine', 0.1, 0.15);
+        setTimeout(() => this.playTone(659.25, 'sine', 0.18, 0.15), 90);
+      }
+
+      playTabu() {
+        if (!this.ctx) return;
+        this.playTone(140, 'sawtooth', 0.25, 0.2);
+      }
+
+      playPassWhoosh() {
+        if (!this.ctx) return;
+        try {
+          const bufferSize = this.ctx.sampleRate * 0.18;
+          const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
+          const noise = this.ctx.createBufferSource();
+          noise.buffer = buffer;
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(300, this.ctx.currentTime);
+          filter.frequency.exponentialRampToValueAtTime(1400, this.ctx.currentTime + 0.15);
+          filter.Q.value = 3;
+
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.ctx.destination);
+          noise.start();
+        } catch(e) {
+          this.playTone(400, 'sine', 0.15, 0.1);
+        }
+      }
+    }
+
+    const soundFX = new SoundFX();
+
+    // OYUN DURUM DEĞİŞKENLERİ
+    let gameState = {
+      teams: [
+        { name: "Kırmızı Takım", score: 0 },
+        { name: "Mavi Takım", score: 0 }
+      ],
+      currentTeamIndex: 0,
+      turnDuration: 60,
+      totalRounds: 3,
+      tabuPenalty: 1,
+      passLimit: 3,
+      currentRound: 1,
+      availableCards: [],
+      
+      // Tur İçi Değişkenler
+      turnPassesLeft: 3,
+      turnStats: { correct: 0, tabu: 0, pass: 0 },
+      turnHistory: [],
+      currentCard: null,
+      timeLeft: 60,
+      timerInterval: null,
+      isPaused: false,
+      timerPathLength: 0
+    };
+
+    // DOM ELEMENTLERİ
+    const screens = {
+      setup: document.getElementById("screen-setup"),
+      ready: document.getElementById("screen-ready"),
+      play: document.getElementById("screen-play"),
+      summary: document.getElementById("screen-summary"),
+      gameover: document.getElementById("screen-gameover")
+    };
+
+    // UYGULAMA BAŞLANGICI
+    window.addEventListener("DOMContentLoaded", () => {
+      initSetupScreen();
+      shuffleCardPool();
+      
+      const timerBorder = document.getElementById("timer-border");
+      if (timerBorder) {
+        gameState.timerPathLength = timerBorder.getTotalLength();
+        timerBorder.style.strokeDasharray = gameState.timerPathLength;
+      }
+
+      // Splash Screen Kapanışı (2.25s dolum sonrasında yumuşak geçiş)
+      setTimeout(() => {
+        const splash = document.getElementById("splash-screen");
+        splash.style.opacity = "0";
+        splash.style.pointerEvents = "none";
+        splash.style.transform = "scale(1.06) translateY(-10px)";
+
+        showScreen("setup");
+
+        setTimeout(() => {
+          splash.classList.add("hidden");
+        }, 700);
+      }, 2250);
+    });
+
+    function shuffleCardPool() {
+      gameState.availableCards = [...ALL_CARDS];
+      for (let i = gameState.availableCards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [gameState.availableCards[i], gameState.availableCards[j]] = [gameState.availableCards[j], gameState.availableCards[i]];
+      }
+    }
+
+    function showScreen(screenName) {
+      Object.keys(screens).forEach(key => {
+        if (key === screenName) {
+          screens[key].classList.remove("hidden");
+          screens[key].classList.remove("screen-enter");
+          void screens[key].offsetWidth; // Reflow reset
+          screens[key].classList.add("screen-enter");
+        } else {
+          screens[key].classList.add("hidden");
+        }
+      });
+    }
+
+    // AYARLAR EKRANI
+    function initSetupScreen() {
+      const inputTime = document.getElementById("input-time");
+      const timeVal = document.getElementById("time-val");
+      const inputRounds = document.getElementById("input-rounds");
+      const roundsVal = document.getElementById("rounds-val");
+      const inputTabuPenalty = document.getElementById("input-tabu-penalty");
+      const tabuPenaltyVal = document.getElementById("tabu-penalty-val");
+      const inputPassLimit = document.getElementById("input-pass-limit");
+      const passLimitVal = document.getElementById("pass-limit-val");
+
+      inputTime.addEventListener("input", (e) => timeVal.textContent = `${e.target.value} saniye`);
+      inputRounds.addEventListener("input", (e) => roundsVal.textContent = `${e.target.value} Tur`);
+      inputTabuPenalty.addEventListener("input", (e) => tabuPenaltyVal.textContent = `-${e.target.value} Puan`);
+      inputPassLimit.addEventListener("input", (e) => passLimitVal.textContent = `${e.target.value} Pas`);
+
+      document.getElementById("btn-start-game").addEventListener("click", () => {
+        soundFX.init();
+
+        const team1 = document.getElementById("team1-name").value.trim() || "Kırmızı Takım";
+        const team2 = document.getElementById("team2-name").value.trim() || "Mavi Takım";
+
+        gameState.teams[0].name = team1;
+        gameState.teams[0].score = 0;
+        gameState.teams[1].name = team2;
+        gameState.teams[1].score = 0;
+
+        gameState.turnDuration = parseInt(inputTime.value);
+        gameState.totalRounds = parseInt(inputRounds.value);
+        gameState.tabuPenalty = parseInt(inputTabuPenalty.value);
+        gameState.passLimit = parseInt(inputPassLimit.value);
+
+        gameState.currentRound = 1;
+        gameState.currentTeamIndex = 0;
+
+        prepareReadyScreen();
+      });
+    }
+
+    // TUR HAZIRLIK EKRANI
+    function prepareReadyScreen() {
+      const activeTeam = gameState.teams[gameState.currentTeamIndex];
+
+      document.getElementById("ready-round-badge").textContent = `Tur ${gameState.currentRound} / ${gameState.totalRounds}`;
+      
+      const readyTeamName = document.getElementById("ready-team-name");
+      readyTeamName.textContent = activeTeam.name;
+      readyTeamName.style.color = gameState.currentTeamIndex === 0 ? '#f87171' : '#60a5fa';
+
+      document.getElementById("ready-score-team1-label").textContent = gameState.teams[0].name;
+      document.getElementById("ready-score-team1").textContent = gameState.teams[0].score;
+      document.getElementById("ready-score-team2-label").textContent = gameState.teams[1].name;
+      document.getElementById("ready-score-team2").textContent = gameState.teams[1].score;
+
+      showScreen("ready");
+    }
+
+    // 3-2-1 GERİ SAYIM ANİMASYONU
+    function runCountdown(callback) {
+      soundFX.init();
+
+      const overlay = document.getElementById("countdown-overlay");
+      const numberEl = document.getElementById("countdown-number");
+      const teamTitle = document.getElementById("countdown-team-title");
+
+      const activeTeam = gameState.teams[gameState.currentTeamIndex];
+      teamTitle.textContent = `${activeTeam.name} Hazırlan!`;
+      
+      overlay.classList.remove("hidden");
+      
+      let count = 3;
+      
+      function updateDisplay(val, isText = false) {
+        numberEl.classList.remove("animate-pop");
+        void numberEl.offsetWidth; // Reflow reset
+        numberEl.textContent = val;
+        
+        if (isText) {
+          numberEl.style.fontSize = "64px";
+          numberEl.style.color = "#34d399";
+          numberEl.style.textShadow = "0 10px 30px rgba(52,211,153,0.4)";
+          soundFX.playStartChime();
+        } else {
+          numberEl.style.fontSize = "110px";
+          numberEl.style.color = "#f59e0b";
+          numberEl.style.textShadow = "0 10px 30px rgba(251,191,36,0.4)";
+          soundFX.playCountdownTick();
+        }
+        numberEl.classList.add("animate-pop");
+      }
+
+      updateDisplay(count);
+
+      const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          updateDisplay(count);
+        } else if (count === 0) {
+          updateDisplay("BAŞLA!", true);
+        } else {
+          clearInterval(interval);
+          overlay.classList.add("hidden");
+          callback();
+        }
+      }, 900);
+    }
+
+    document.getElementById("btn-start-turn").addEventListener("click", () => {
+      runCountdown(() => {
+        startTurn();
+      });
+    });
+
+    // TURU BAŞLAT
+    function startTurn() {
+      gameState.turnPassesLeft = gameState.passLimit;
+      gameState.turnStats = { correct: 0, tabu: 0, pass: 0 };
+      gameState.turnHistory = [];
+      gameState.timeLeft = gameState.turnDuration;
+      gameState.isPaused = false;
+
+      const activeTeam = gameState.teams[gameState.currentTeamIndex];
+      document.getElementById("play-team-name").textContent = activeTeam.name;
+      document.getElementById("play-team-badge").style.background = gameState.currentTeamIndex === 0 ? '#ef4444' : '#3b82f6';
+
+      document.getElementById("label-tabu-btn").textContent = `TABU (-${gameState.tabuPenalty})`;
+
+      updateTurnStatsUI();
+      updateTimerUI();
+      nextCard();
+      showScreen("play");
+      startTimer();
+    }
+
+    // SAYAÇ VE ÇERÇEVE ANİMASYONU
+    function updateTimerUI() {
+      const timerEl = document.getElementById("play-timer");
+      const timerBorder = document.getElementById("timer-border");
+      const timerBox = document.getElementById("timer-box");
+      const timerIcon = document.getElementById("timer-icon");
+
+      timerEl.textContent = gameState.timeLeft;
+
+      if (timerBorder && gameState.timerPathLength > 0) {
+        const progress = gameState.timeLeft / gameState.turnDuration;
+        const offset = gameState.timerPathLength * (1 - progress);
+        timerBorder.style.strokeDashoffset = offset;
+
+        // Son 10 saniye ses ve görsel uyarısı
+        if (gameState.timeLeft <= 10 && gameState.timeLeft > 0) {
+          timerBorder.setAttribute("stroke", "#ef4444");
+          timerEl.style.color = "#ef4444";
+          timerIcon.style.color = "#ef4444";
+          timerBox.classList.add("timer-warning");
+
+          if (gameState.timeLeft <= 3) {
+            // Son 3 saniye: Hızlı tempolu tıklar (4x)
+            soundFX.playCountdownTick();
+            setTimeout(() => soundFX.playCountdownTick(), 250);
+            setTimeout(() => soundFX.playCountdownTick(), 500);
+            setTimeout(() => soundFX.playCountdownTick(), 750);
+          } else {
+            // 4-10. saniyeler: Saniyede 1 tık
+            soundFX.playCountdownTick();
+          }
+        } else {
+          timerBorder.setAttribute("stroke", "#facc15");
+          timerEl.style.color = "#facc15";
+          timerIcon.style.color = "#facc15";
+          timerBox.classList.remove("timer-warning");
+        }
+      }
+    }
+
+    function startTimer() {
+      clearInterval(gameState.timerInterval);
+      updateTimerUI();
+
+      gameState.timerInterval = setInterval(() => {
+        if (!gameState.isPaused) {
+          gameState.timeLeft--;
+          updateTimerUI();
+
+          if (gameState.timeLeft <= 0) {
+            endTurn();
+          }
+        }
+      }, 1000);
+    }
+
+    // PAUSE / RESUME / ANA MENÜ
+    const btnPause = document.getElementById("btn-pause");
+    const pauseOverlay = document.getElementById("pause-overlay");
+    const btnResume = document.getElementById("btn-resume");
+    const btnMainMenu = document.getElementById("btn-main-menu");
+
+    function togglePause() {
+      gameState.isPaused = !gameState.isPaused;
+      if (gameState.isPaused) {
+        pauseOverlay.classList.remove("hidden");
+      } else {
+        pauseOverlay.classList.add("hidden");
+      }
+    }
+
+    btnPause.addEventListener("click", togglePause);
+    btnResume.addEventListener("click", togglePause);
+    
+    btnMainMenu.addEventListener("click", () => {
+      clearInterval(gameState.timerInterval);
+      gameState.isPaused = false;
+      pauseOverlay.classList.add("hidden");
+      showScreen("setup");
+    });
+
+    // KART AKICI ANIMASYON TETİKLEYİCİSİ
+    function triggerCardAnimation(animClass, callback) {
+      const cardCard = document.getElementById("card-card");
+      cardCard.classList.remove("anim-correct", "anim-tabu", "anim-pass");
+      void cardCard.offsetWidth; // Reflow
+      cardCard.classList.add(animClass);
+
+      setTimeout(() => {
+        callback();
+      }, 140);
+    }
+
+    // KART ALMA
+    function nextCard() {
+      if (gameState.availableCards.length === 0) {
+        shuffleCardPool();
+      }
+
+      gameState.currentCard = gameState.availableCards.pop();
+      renderCard(gameState.currentCard);
+    }
+
+    // KART ÇİZİMİ
+    function renderCard(card) {
+      document.getElementById("card-word").textContent = card.kelime;
+
+      const forbiddenContainer = document.getElementById("card-forbidden");
+      forbiddenContainer.innerHTML = "";
+
+      card.yasakli_kelimeler.forEach(word => {
+        const item = document.createElement("div");
+        item.style.cssText = "background: rgba(2,6,23,0.9); border: 1px solid rgba(239,68,68,0.25); color: #f1f5f9; font-weight: 800; font-size: 15px; text-align: center; padding: 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 1px;";
+        item.textContent = word;
+        forbiddenContainer.appendChild(item);
+      });
+    }
+
+    // BUTON AKSİYONLARI (DOĞRU, TABU, PAS)
+    document.getElementById("btn-correct").addEventListener("click", () => {
+      if (gameState.isPaused) return;
+      soundFX.playCorrect();
+      gameState.turnStats.correct++;
+      gameState.turnHistory.push({ card: gameState.currentCard, type: "correct" });
+      updateTurnStatsUI();
+
+      triggerCardAnimation("anim-correct", () => {
+        nextCard();
+      });
+    });
+
+    document.getElementById("btn-tabu").addEventListener("click", () => {
+      if (gameState.isPaused) return;
+      soundFX.playTabu();
+      gameState.turnStats.tabu++;
+      gameState.turnHistory.push({ card: gameState.currentCard, type: "tabu" });
+      updateTurnStatsUI();
+
+      triggerCardAnimation("anim-tabu", () => {
+        nextCard();
+      });
+    });
+
+    document.getElementById("btn-pass").addEventListener("click", () => {
+      if (gameState.isPaused || gameState.turnPassesLeft <= 0) return;
+      soundFX.playPassWhoosh();
+      gameState.turnPassesLeft--;
+      gameState.turnStats.pass++;
+      gameState.turnHistory.push({ card: gameState.currentCard, type: "pass" });
+      updateTurnStatsUI();
+
+      triggerCardAnimation("anim-pass", () => {
+        nextCard();
+      });
+    });
+
+    function updateTurnStatsUI() {
+      document.getElementById("stat-correct").textContent = gameState.turnStats.correct;
+      document.getElementById("stat-tabu").textContent = gameState.turnStats.tabu;
+      document.getElementById("stat-pass").textContent = gameState.turnPassesLeft;
+
+      const btnPass = document.getElementById("btn-pass");
+      document.getElementById("label-pass-btn").textContent = `PAS (${gameState.turnPassesLeft})`;
+      
+      if (gameState.turnPassesLeft <= 0) {
+        btnPass.disabled = true;
+      } else {
+        btnPass.disabled = false;
+      }
+    }
+
+    // TUR BİTİŞİ
+    function endTurn() {
+      clearInterval(gameState.timerInterval);
+      pauseOverlay.classList.add("hidden");
+
+      const netScore = (gameState.turnStats.correct * 1) - (gameState.turnStats.tabu * gameState.tabuPenalty);
+      gameState.teams[gameState.currentTeamIndex].score += netScore;
+
+      const activeTeam = gameState.teams[gameState.currentTeamIndex];
+      document.getElementById("summary-team-title").textContent = `${activeTeam.name} Sonuçları`;
+      
+      const netScoreEl = document.getElementById("summary-net-score");
+      netScoreEl.textContent = (netScore >= 0 ? `+${netScore}` : `${netScore}`);
+      netScoreEl.style.color = netScore >= 0 ? '#34d399' : '#f87171';
+
+      const historyContainer = document.getElementById("summary-history-list");
+      historyContainer.innerHTML = "";
+
+      if (gameState.turnHistory.length === 0) {
+        historyContainer.innerHTML = `<p style="color: #64748b; font-style: italic; text-align: center; padding: 16px;">Bu turda kelime oynanmadı.</p>`;
+      } else {
+        gameState.turnHistory.forEach(item => {
+          const row = document.createElement("div");
+          row.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: rgba(2,6,23,0.7); padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);";
+          
+          let typeBadge = '';
+          if (item.type === 'correct') {
+            typeBadge = `<span style="background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); padding: 2px 8px; border-radius: 6px; font-weight: 800;">+1 Doğru</span>`;
+          } else if (item.type === 'tabu') {
+            typeBadge = `<span style="background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); padding: 2px 8px; border-radius: 6px; font-weight: 800;">-${gameState.tabuPenalty} Tabu</span>`;
+          } else {
+            typeBadge = `<span style="background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); padding: 2px 8px; border-radius: 6px; font-weight: 800;">0 Pas</span>`;
+          }
+
+          row.innerHTML = `
+            <span style="font-weight: 800; color: #ffffff; text-transform: uppercase;">${item.card.kelime}</span>
+            ${typeBadge}
+          `;
+          historyContainer.appendChild(row);
+        });
+      }
+
+      showScreen("summary");
+    }
+
+    document.getElementById("btn-next-turn").addEventListener("click", () => {
+      if (gameState.currentTeamIndex === 0) {
+        gameState.currentTeamIndex = 1;
+      } else {
+        gameState.currentTeamIndex = 0;
+        gameState.currentRound++;
+      }
+
+      if (gameState.currentRound > gameState.totalRounds) {
+        renderGameOverScreen();
+      } else {
+        prepareReadyScreen();
+      }
+    });
+
+    function renderGameOverScreen() {
+      const t1 = gameState.teams[0];
+      const t2 = gameState.teams[1];
+
+      let winnerText = "";
+      if (t1.score > t2.score) {
+        winnerText = `🏆 ${t1.name} Kazandı!`;
+      } else if (t2.score > t1.score) {
+        winnerText = `🏆 ${t2.name} Kazandı!`;
+      } else {
+        winnerText = `🤝 Berabere Bitti!`;
+      }
+
+      document.getElementById("gameover-winner-text").textContent = winnerText;
+
+      const scoresContainer = document.getElementById("gameover-scores");
+      scoresContainer.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(2,6,23,0.8); padding: 14px; border-radius: 14px; border: 1px solid rgba(239,68,68,0.3);">
+          <span style="font-weight: 800; color: #f87171;">${t1.name}</span>
+          <span style="font-size: 22px; font-weight: 900; color: #ffffff;">${t1.score} Puan</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(2,6,23,0.8); padding: 14px; border-radius: 14px; border: 1px solid rgba(59,130,246,0.3);">
+          <span style="font-weight: 800; color: #60a5fa;">${t2.name}</span>
+          <span style="font-size: 22px; font-weight: 900; color: #ffffff;">${t2.score} Puan</span>
+        </div>
+      `;
+
+      showScreen("gameover");
+    }
+
+    document.getElementById("btn-restart").addEventListener("click", () => {
+      showScreen("setup");
+    });
+  </script>
+</body>
+</html>
