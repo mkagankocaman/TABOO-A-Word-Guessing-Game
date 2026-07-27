@@ -9,7 +9,6 @@
   <title>Tabu Oyunu</title>
   
   <style>
-    /* TEMEL SIFIRLAMA VE ÇEVRİMDIŞI YAZI TİPLERİ */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -38,7 +37,7 @@
       align-items: center;
     }
 
-    /* GÜVENLİ ALAN (SAFE AREA / NOTCH) HİZALAMASI */
+    /* 📱 DİNAMİK STATUS BAR & SAFE AREA HİZALAMASI (HER TELEFONA ÖZEL MİLİMETRİK) */
     #app {
       flex: 1;
       display: flex;
@@ -47,10 +46,10 @@
       width: 100%;
       height: 100%;
       margin: 0 auto;
-      padding-top: max(48px, env(safe-area-inset-top, 48px));
-      padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
-      padding-left: max(16px, env(safe-area-inset-left, 16px));
-      padding-right: max(16px, env(safe-area-inset-right, 16px));
+      padding-top: calc(12px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      padding-left: calc(16px + env(safe-area-inset-left, 0px));
+      padding-right: calc(16px + env(safe-area-inset-right, 0px));
       justify-content: space-between;
       position: relative;
     }
@@ -60,7 +59,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
       will-change: transform, opacity;
       backface-visibility: hidden;
       min-height: 0;
@@ -75,7 +74,7 @@
       background-color: rgba(15, 23, 42, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 24px;
-      padding: 18px;
+      padding: 16px;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
@@ -351,33 +350,34 @@
     .anim-pass { animation: cardPassAnim 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; will-change: transform, opacity, box-shadow; }
     .anim-undo { animation: cardUndoAnim 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; will-change: transform, opacity, box-shadow; }
 
-    /* SPLASH & POP ANIMASYONLARI */
+    /* 🚀 YENİLENMİŞ AÇILIŞ (SPLASH) EKRANI KADEMELİ ANIMASYONLARI */
     #splash-screen {
       position: fixed;
       inset: 0;
-      z-index: 50;
+      z-index: 100;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       background-color: #020617;
       padding: 24px;
-      padding-top: max(48px, env(safe-area-inset-top, 48px));
+      padding-top: calc(16px + env(safe-area-inset-top, 0px));
       text-align: center;
-      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: opacity, transform;
     }
 
-    @keyframes logoPulseGlow {
-      0%, 100% { transform: translate3d(0, 0, 0) scale(1); filter: drop-shadow(0 0 20px rgba(239,68,68,0.5)); }
-      50% { transform: translate3d(0, -4px, 0) scale(1.06); filter: drop-shadow(0 0 40px rgba(245,158,11,0.8)); }
+    #splash-logo {
+      opacity: 0;
+      transform: translate3d(0, 15px, 0) scale(0.85);
+      animation: logoFadeIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
     }
 
-    .logo-glow {
-      animation: logoPulseGlow 2.2s ease-in-out infinite;
+    @keyframes logoFadeIn {
+      0% { opacity: 0; transform: translate3d(0, 15px, 0) scale(0.85); filter: drop-shadow(0 0 0px rgba(239,68,68,0)); }
+      100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: drop-shadow(0 0 25px rgba(245,158,11,0.6)); }
     }
 
-    /* SPLASH YÜKLENME BARI ANIMASYONU (Sıfır Beklemeli Akıcı Doldurma) */
     .splash-bar-container {
       width: 200px;
       height: 6px;
@@ -386,7 +386,14 @@
       overflow: hidden;
       position: relative;
       box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
-      margin-top: 24px;
+      margin-top: 28px;
+      opacity: 0;
+      animation: barContainerFadeIn 0.35s ease 0.65s forwards;
+    }
+
+    @keyframes barContainerFadeIn {
+      0% { opacity: 0; transform: translateY(6px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes splashBarFill {
@@ -400,7 +407,7 @@
       background: linear-gradient(90deg, #ef4444, #f59e0b, #fde047);
       border-radius: 10px;
       box-shadow: 0 0 14px rgba(245, 158, 11, 0.9);
-      animation: splashBarFill 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: splashBarFill 1.35s cubic-bezier(0.4, 0, 0.2, 1) 0.75s forwards;
     }
 
     @keyframes countPopAnim {
@@ -448,20 +455,20 @@
 </head>
 <body style="background-color: #020617;">
 
-  <!-- 🚀 AÇILIŞ / SPLASH EKRANI -->
+  <!-- 🚀 AÇILIŞ / SPLASH EKRANI (KADEMELİ BEKLEMESİZ GELİŞ) -->
   <div id="splash-screen">
-    <div class="logo-glow">
+    <div id="splash-logo">
       <h1 style="font-size: 64px; font-weight: 900; letter-spacing: 8px; background: linear-gradient(135deg, #ef4444, #f59e0b, #fde047); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
         TABU
       </h1>
     </div>
     <div class="splash-bar-container">
-      <div class="splash-bar-fill"></div>
+      <div id="splash-bar-fill" class="splash-bar-fill"></div>
     </div>
   </div>
 
   <!-- ⏱️ 3-2-1 GERİ SAYIM KATMANI -->
-  <div id="countdown-overlay" class="hidden" style="position: fixed; inset: 0; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(12px); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; padding-top: max(48px, env(safe-area-inset-top, 48px)); text-align: center;">
+  <div id="countdown-overlay" class="hidden" style="position: fixed; inset: 0; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(12px); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; padding-top: calc(16px + env(safe-area-inset-top, 0px)); text-align: center;">
     <span id="countdown-team-title" style="color: #f59e0b; font-weight: 800; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">
       Kırmızı Takım Hazırlan!
     </span>
@@ -650,8 +657,8 @@
         <!-- Kart İçeriği (Geri Al Butonu Dahil) -->
         <div id="card-card" class="panel card-shadow" style="height: 100%; display: flex; flex-direction: column; justify-content: flex-start; border-width: 2px; padding: 16px 20px; gap: 14px; transition: border-color 0.2s ease, box-shadow 0.2s ease;">
           
-          <!-- Kart Üst Çubuğu: Geri Al Butonu ve Kategori -->
-          <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 26px; flex-shrink: 0;">
+          <!-- Kart Üst Çubuğu: Geri Al Butonu -->
+          <div style="display: flex; align-items: center; justify-content: flex-start; width: 100%; height: 26px; flex-shrink: 0;">
             <button id="btn-undo" class="btn-undo disabled" title="Son yapılan hareketi geri al ve süreyi durdur">
               <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="1 4 1 10 7 10"/>
@@ -659,10 +666,6 @@
               </svg>
               <span>Geri Al</span>
             </button>
-            
-            <span id="card-category" style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px;">
-              Genel
-            </span>
           </div>
 
           <!-- Hedef Kelime Konteynırı (Sabit Yükseklik) -->
@@ -778,35 +781,35 @@
   </div>
 
   <script>
-    // 🎴 KART VERİ HAVUZU (500 ADET VERİ)
+    // 🎴 KART VERİ HAVUZU
     const ALL_CARDS = [
-      {"id":1,"kelime":"FENOMEN","yasakli_kelimeler":["İNTERNET","ÜNLÜ","TAKİPÇİ","VİDEO","POPÜLER"],"kategori":"Popüler Kültür","zorluk":"Orta"},
-      {"id":2,"kelime":"SPOILER","yasakli_kelimeler":["DİZİ","FİLM","SONUÇ","BOZMAK","SÖYLEMEK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
-      {"id":3,"kelime":"DİZİ MARATONU","yasakli_kelimeler":["BÖLÜM","GECE","UYKU","BİTİRMEK","EKRAN"],"kategori":"Popüler Kültür","zorluk":"Orta"},
-      {"id":4,"kelime":"FRAGMAN","yasakli_kelimeler":["FİLM","ÖNCESİ","SİNEMA","TANITIM","SAHNE"],"kategori":"Popüler Kültür","zorluk":"Orta"},
-      {"id":5,"kelime":"UNUTULMAZ SAHNE","yasakli_kelimeler":["FİLM","AĞLAMAK","FİNAL","KARE","DİZİ"],"kategori":"Popüler Kültür","zorluk":"Orta"},
-      {"id":6,"kelime":"TREND TOPIC","yasakli_kelimeler":["GÜNDEM","TWİTTER","KONUŞULAN","ETİKET","POPÜLER"],"kategori":"Popüler Kültür","zorluk":"Orta"},
-      {"id":7,"kelime":"MEME","yasakli_kelimeler":["KOMİK","PAYLAŞIM","GÜLMEK","İNTERNET","ESPRİ"],"kategori":"Popüler Kültür","zorluk":"Orta"},
-      {"id":8,"kelime":"PODCAST","yasakli_kelimeler":["SES","KAYIT","KONUŞMA","MİKROFON","DİNLEMEK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
-      {"id":9,"kelime":"YOUTUBER","yasakli_kelimeler":["VİDEO","KANAL","ABONE","KAMERA","PAYLAŞMAK"],"kategori":"Popüler Kültür","zorluk":"Orta"},
-      {"id":10,"kelime":"CANLI YAYIN","yasakli_kelimeler":["İZLEYİCİ","EKRAN","ANLIK","YORUM","ÜNLÜ"],"kategori":"Popüler Kültür","zorluk":"Orta"},
-      {"id":61,"kelime":"YAPAY ZEKA","yasakli_kelimeler":["ROBOT","BİLGİSAYAR","ALGORİTMA","PROGRAM","MAKİNE"],"kategori":"Teknoloji","zorluk":"Orta"},
-      {"id":62,"kelime":"AKILLI TELEFON","yasakli_kelimeler":["EKRAN","UYGULAMA","ARAMA","CEP","İNTERNET"],"kategori":"Teknoloji","zorluk":"Orta"},
-      {"id":63,"kelime":"ŞARJ ALETİ","yasakli_kelimeler":["KABLO","PİL","PRİZ","DOLDURMAK","ELEKTRİK"],"kategori":"Teknoloji","zorluk":"Orta"},
-      {"id":121,"kelime":"AĞZI KULAKLARINA VARMAK","yasakli_kelimeler":["MUTLU","GÜLMEK","SEVİNÇ","YÜZ","NEŞE"],"kategori":"Deyimler","zorluk":"Zor"},
-      {"id":122,"kelime":"BURNU BÜYÜMEK","yasakli_kelimeler":["KİBİR","GURUR","KENDİNİ BEĞENMEK","ŞIMARMAK","BÖBÜRLENMEK"],"kategori":"Deyimler","zorluk":"Zor"},
-      {"id":181,"kelime":"ÖZGÜRLÜK","yasakli_kelimeler":["BAĞIMSIZLIK","SERBEST","HAK","KISITLAMA","ZİNCİR"],"kategori":"Soyut Kavramlar","zorluk":"Zor"},
-      {"id":241,"kelime":"ALIŞVERİŞ LİSTESİ","yasakli_kelimeler":["MARKET","YAZMAK","EKSİK","ALMAK","KAĞIT"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
-      {"id":242,"kelime":"ÇAMAŞIR YIKAMAK","yasakli_kelimeler":["MAKİNE","DETERJAN","KİRLİ","TEMİZ","KURUTMAK"],"kategori":"Günlük Hayat","zorluk":"Kolay"},
-      {"id":301,"kelime":"PENALTI","yasakli_kelimeler":["FUTBOL","KALECİ","VURUŞ","CEZA SAHASI","TOP"],"kategori":"Spor","zorluk":"Orta"},
-      {"id":341,"kelime":"MENEMEN","yasakli_kelimeler":["YUMURTA","DOMATES","BİBER","KAHVALTI","TAVA"],"kategori":"Yemek","zorluk":"Kolay"},
-      {"id":342,"kelime":"LAHMACUN","yasakli_kelimeler":["HAMUR","KIYMA","İNCE","FIRIN","RULO"],"kategori":"Yemek","zorluk":"Kolay"},
-      {"id":343,"kelime":"BAKLAVA","yasakli_kelimeler":["ŞERBET","FISTIK","TATLI","YUFKA","FIRIN"],"kategori":"Yemek","zorluk":"Kolay"},
-      {"id":371,"kelime":"KAHVE FALI","yasakli_kelimeler":["FİNCAN","TABAK","GELECEK","BAKMAK","TELVE"],"kategori":"Yemek","zorluk":"Kolay"},
-      {"id":382,"kelime":"AŞÇI","yasakli_kelimeler":["MUTFAK","YEMEK","PİŞİRMEK","TENCERE","RESTORAN"],"kategori":"Meslekler","zorluk":"Kolay"},
-      {"id":411,"kelime":"ZÜRAFA","yasakli_kelimeler":["UZUN BOYUN","AFRİKA","LEKE","YAPRAK","SAVAN"],"kategori":"Hayvanlar","zorluk":"Kolay"},
-      {"id":441,"kelime":"HASHTAG","yasakli_kelimeler":["KARE","İŞARET","TWİTTER","KONU","PAYLAŞIM"],"kategori":"Sosyal Medya","zorluk":"Orta"},
-      {"id":472,"kelime":"GİTAR","yasakli_kelimeler":["TEL","ÇALMAK","MÜZİK ALETİ","AKOR","PARMAK"],"kategori":"Müzik","zorluk":"Orta"}
+      {"id":1,"kelime":"FENOMEN","yasakli_kelimeler":["İNTERNET","ÜNLÜ","TAKİPÇİ","VİDEO","POPÜLER"]},
+      {"id":2,"kelime":"SPOILER","yasakli_kelimeler":["DİZİ","FİLM","SONUÇ","BOZMAK","SÖYLEMEK"]},
+      {"id":3,"kelime":"DİZİ MARATONU","yasakli_kelimeler":["BÖLÜM","GECE","UYKU","BİTİRMEK","EKRAN"]},
+      {"id":4,"kelime":"FRAGMAN","yasakli_kelimeler":["FİLM","ÖNCESİ","SİNEMA","TANITIM","SAHNE"]},
+      {"id":5,"kelime":"UNUTULMAZ SAHNE","yasakli_kelimeler":["FİLM","AĞLAMAK","FİNAL","KARE","DİZİ"]},
+      {"id":6,"kelime":"TREND TOPIC","yasakli_kelimeler":["GÜNDEM","TWİTTER","KONUŞULAN","ETİKET","POPÜLER"]},
+      {"id":7,"kelime":"MEME","yasakli_kelimeler":["KOMİK","PAYLAŞIM","GÜLMEK","İNTERNET","ESPRİ"]},
+      {"id":8,"kelime":"PODCAST","yasakli_kelimeler":["SES","KAYIT","KONUŞMA","MİKROFON","DİNLEMEK"]},
+      {"id":9,"kelime":"YOUTUBER","yasakli_kelimeler":["VİDEO","KANAL","ABONE","KAMERA","PAYLAŞMAK"]},
+      {"id":10,"kelime":"CANLI YAYIN","yasakli_kelimeler":["İZLEYİCİ","EKRAN","ANLIK","YORUM","ÜNLÜ"]},
+      {"id":61,"kelime":"YAPAY ZEKA","yasakli_kelimeler":["ROBOT","BİLGİSAYAR","ALGORİTMA","PROGRAM","MAKİNE"]},
+      {"id":62,"kelime":"AKILLI TELEFON","yasakli_kelimeler":["EKRAN","UYGULAMA","ARAMA","CEP","İNTERNET"]},
+      {"id":63,"kelime":"ŞARJ ALETİ","yasakli_kelimeler":["KABLO","PİL","PRİZ","DOLDURMAK","ELEKTRİK"]},
+      {"id":121,"kelime":"AĞZI KULAKLARINA VARMAK","yasakli_kelimeler":["MUTLU","GÜLMEK","SEVİNÇ","YÜZ","NEŞE"]},
+      {"id":122,"kelime":"BURNU BÜYÜMEK","yasakli_kelimeler":["KİBİR","GURUR","KENDİNİ BEĞENMEK","ŞIMARMAK","BÖBÜRLENMEK"]},
+      {"id":181,"kelime":"ÖZGÜRLÜK","yasakli_kelimeler":["BAĞIMSIZLIK","SERBEST","HAK","KISITLAMA","ZİNCİR"]},
+      {"id":241,"kelime":"ALIŞVERİŞ LİSTESİ","yasakli_kelimeler":["MARKET","YAZMAK","EKSİK","ALMAK","KAĞIT"]},
+      {"id":242,"kelime":"ÇAMAŞIR YIKAMAK","yasakli_kelimeler":["MAKİNE","DETERJAN","KİRLİ","TEMİZ","KURUTMAK"]},
+      {"id":301,"kelime":"PENALTI","yasakli_kelimeler":["FUTBOL","KALECİ","VURUŞ","CEZA SAHASI","TOP"]},
+      {"id":341,"kelime":"MENEMEN","yasakli_kelimeler":["YUMURTA","DOMATES","BİBER","KAHVALTI","TAVA"]},
+      {"id":342,"kelime":"LAHMACUN","yasakli_kelimeler":["HAMUR","KIYMA","İNCE","FIRIN","RULO"]},
+      {"id":343,"kelime":"BAKLAVA","yasakli_kelimeler":["ŞERBET","FISTIK","TATLI","YUFKA","FIRIN"]},
+      {"id":371,"kelime":"KAHVE FALI","yasakli_kelimeler":["FİNCAN","TABAK","GELECEK","BAKMAK","TELVE"]},
+      {"id":382,"kelime":"AŞÇI","yasakli_kelimeler":["MUTFAK","YEMEK","PİŞİRMEK","TENCERE","RESTORAN"]},
+      {"id":411,"kelime":"ZÜRAFA","yasakli_kelimeler":["UZUN BOYUN","AFRİKA","LEKE","YAPRAK","SAVAN"]},
+      {"id":441,"kelime":"HASHTAG","yasakli_kelimeler":["KARE","İŞARET","TWİTTER","KONU","PAYLAŞIM"]},
+      {"id":472,"kelime":"GİTAR","yasakli_kelimeler":["TEL","ÇALMAK","MÜZİK ALETİ","AKOR","PARMAK"]}
     ];
 
     // 🔊 ÇEVRİMDIŞI WEB AUDIO API SES SENTEZLEYİCİ
@@ -932,7 +935,7 @@
       turnStats: { correct: 0, tabu: 0, pass: 0 },
       turnHistory: [],
       currentCard: null,
-      lastAction: null, // Geri al mekanizması için son hamle kaydı
+      lastAction: null,
       timeLeft: 60,
       timerInterval: null,
       isPaused: false,
@@ -949,7 +952,7 @@
       gameover: document.getElementById("screen-gameover")
     };
 
-    // UYGULAMA BAŞLANGICI
+    // UYGULAMA BAŞLANGICI VE SPLASH DİNAMİK SIFIR BEKLEME DÖNGÜSÜ
     window.addEventListener("DOMContentLoaded", () => {
       initSetupScreen();
       shuffleCardPool();
@@ -963,18 +966,21 @@
         timerBorder.style.strokeDasharray = gameState.timerPathLength;
       }
 
-      // Splash Screen Kapanışı (Yükleme dolduğu an beklemesiz yumuşak geçiş)
-      setTimeout(() => {
-        const splash = document.getElementById("splash-screen");
-        if (splash) {
-          splash.style.opacity = "0";
-          splash.style.pointerEvents = "none";
-          splash.style.transform = "scale(1.04) translateY(-8px)";
-          setTimeout(() => {
-            splash.classList.add("hidden");
-          }, 400);
-        }
-      }, 1800);
+      // Splash Bar Dolduğu An HİÇ BEKLEMEDEN Açılış Ekranını Kapat
+      const barFillEl = document.getElementById("splash-bar-fill");
+      if (barFillEl) {
+        barFillEl.addEventListener("animationend", () => {
+          const splash = document.getElementById("splash-screen");
+          if (splash) {
+            splash.style.opacity = "0";
+            splash.style.pointerEvents = "none";
+            splash.style.transform = "scale(1.02) translateY(-6px)";
+            setTimeout(() => {
+              splash.classList.add("hidden");
+            }, 350);
+          }
+        });
+      }
     });
 
     function shuffleCardPool() {
@@ -990,7 +996,7 @@
         if (key === screenName) {
           screens[key].classList.remove("hidden");
           screens[key].classList.remove("screen-enter");
-          void screens[key].offsetWidth; // Reflow reset
+          void screens[key].offsetWidth;
           screens[key].classList.add("screen-enter");
         } else {
           screens[key].classList.add("hidden");
@@ -1072,7 +1078,7 @@
       
       function updateDisplay(val, isText = false) {
         numberEl.classList.remove("animate-pop");
-        void numberEl.offsetWidth; // Reflow reset
+        void numberEl.offsetWidth;
         numberEl.textContent = val;
         
         if (isText) {
@@ -1151,7 +1157,6 @@
         const offset = gameState.timerPathLength * (1 - progress);
         timerBorder.style.strokeDashoffset = offset;
 
-        // Son 10 saniye ses ve görsel uyarısı
         if (gameState.timeLeft <= 10 && gameState.timeLeft > 0 && !gameState.isPaused) {
           timerBorder.setAttribute("stroke", "#ef4444");
           timerEl.style.color = "#ef4444";
@@ -1221,7 +1226,7 @@
 
       const cardCard = document.getElementById("card-card");
       cardCard.classList.remove("anim-correct", "anim-tabu", "anim-pass", "anim-undo");
-      void cardCard.offsetWidth; // Reflow reset
+      void cardCard.offsetWidth;
       cardCard.classList.add(animClass);
 
       setTimeout(() => {
@@ -1247,7 +1252,6 @@
     // KART ÇİZİMİ
     function renderCard(card) {
       document.getElementById("card-word").textContent = card.kelime;
-      document.getElementById("card-category").textContent = card.kategori || "Genel";
 
       const forbiddenContainer = document.getElementById("card-forbidden");
       forbiddenContainer.innerHTML = "";
@@ -1278,7 +1282,6 @@
 
       const last = gameState.lastAction;
 
-      // İlgili aksiyon istatistiğini geri al
       if (last.type === 'correct') {
         gameState.turnStats.correct = Math.max(0, gameState.turnStats.correct - 1);
       } else if (last.type === 'tabu') {
@@ -1288,12 +1291,10 @@
         gameState.turnPassesLeft++;
       }
 
-      // Tur geçmişinden son kaydı sil
       if (gameState.turnHistory.length > 0) {
         gameState.turnHistory.pop();
       }
 
-      // Önceki kartı tekrar sahneye koy
       const previousCard = last.card;
       if (gameState.currentCard && gameState.currentCard !== previousCard) {
         gameState.availableCards.push(gameState.currentCard);
@@ -1302,7 +1303,6 @@
       gameState.currentCard = previousCard;
       renderCard(gameState.currentCard);
 
-      // Tek kullanımlık geri alma hakkını tüket
       gameState.lastAction = null;
 
       // GERİ AL'A BASILDIĞINDA SÜREYİ DURDUR
@@ -1315,7 +1315,7 @@
       triggerCardAnimation("anim-undo", () => {});
     });
 
-    // YENİ BIR AKSİYON BUTONUNA (DOĞRU, TABU, PAS) BASILDIĞINDA SÜREYİ DEVAM ETTİR
+    // YENİ BIR AKSİYON BUTONUNA BASILDIĞINDA SÜREYİ DEVAM ETTİR
     function resumeTimerIfPausedByUndo() {
       if (gameState.isPaused) {
         gameState.isPaused = false;
