@@ -7409,21 +7409,20 @@
       }
 
       // Splash Bar Dolduğu An HİÇ BEKLEMEDEN Açılış Ekranını Kapat
-      const barFillEl = document.getElementById("splash-bar-fill");
-      if (barFillEl) {
-        barFillEl.addEventListener("animationend", () => {
-          const splash = document.getElementById("splash-screen");
-          if (splash) {
-            splash.style.opacity = "0";
-            splash.style.pointerEvents = "none";
-            splash.style.transform = "scale(1.02) translateY(-6px)";
-            setTimeout(() => {
-              splash.classList.add("hidden");
-            }, 350);
-          }
-        });
-      }
-    });
+      setTimeout(() => {
+  const splash = document.getElementById("splash-screen");
+  if (splash) {
+    splash.style.opacity = "0";
+    splash.style.pointerEvents = "none";
+    splash.style.transform = "scale(1.02) translateY(-6px)";
+    setTimeout(() => {
+      splash.classList.add("hidden");
+    }, 350);
+  }
+}, 1700); 
+});
+
+
 
     function shuffleCardPool() {
       gameState.availableCards = [...ALL_CARDS];
