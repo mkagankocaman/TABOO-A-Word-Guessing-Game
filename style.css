@@ -123,7 +123,7 @@ input[type="range"]::-webkit-slider-thumb { appearance: none; width: 20px; heigh
 .splash { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: var(--bg-color); padding: 24px; text-align: center; transition: opacity 0.35s ease; }
 .splash-title { animation: logoFadeIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.3)); }
 .splash-bar-container { width: clamp(160px, 50vw, 220px); height: 6px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; margin-top: 28px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); opacity: 0; animation: barContainerFadeIn 0.35s ease 0.55s forwards; }
-.splash-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--color-danger), var(--color-warning), #fde047); border-radius: 10px; box-shadow: 0 0 14px rgba(245, 158, 11, 0.9); animation: splashBarFill 1s cubic-bezier(0.4, 0, 0.2, 1) 0.65s forwards; }
+.splash-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--color-danger), var(--color-warning), #fde047); border-radius: 10px; box-shadow: 0 0 14px rgba(245, 158, 11, 0.9); animation: splashBarFill 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards; }
 
 /* Ayarlar ekranı başlık alanı — eksikti, eklendi */
 .header-center { flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 12px 0; }
