@@ -17,7 +17,7 @@ A modern, fully customizable, web-based Taboo party game designed for game night
 
 ## 🚀 Key Features
 
-* **Extensive Word Database:** Contains 500 unique Turkish words, each featuring 5 strictly forbidden taboo words.
+* **Extensive Word Database:** Contains 585 unique Turkish words, each featuring 5 strictly forbidden taboo words.
 * **The "Undo" Button (Unique Feature):** Accidentally clicked "Correct" instead of "Taboo"? Unlike most market alternatives, this game includes a rewind button to fix accidental clicks instantly without ruining the score or state.
 * **Highly Customizable Gameplay:** Fully adjust the game rules before you start:
   * **Custom Team Names:** Personalize your team identity (e.g., Red Team vs Blue Team).
