@@ -2,7 +2,7 @@
 
 A modern, fully customizable, web-based Taboo party game designed for game nights. This digital adaptation of the classic word-guessing board game offers highly flexible game configurations and an essential quality-of-life features that set it apart from traditional alternatives.
 
-🚀 **[Live Demo](https://tabutr.vercel.app)**
+🚀 **<a href="https://vercel.app" target="_blank" rel="noopener noreferrer">Live Demo</a>**
 
 ---
 
