@@ -1,4 +1,3 @@
-    // 🎴 KART VERİ HAVUZU
     const ALL_CARDS = [
   {
     "id": 1,
@@ -1317,7 +1316,7 @@
       "İNANÇ",
       "GELECEK",
       "İYİMSERLİK",
-      "İŞİK"
+      "IŞIK"
     ]
   },
   {
@@ -1479,7 +1478,7 @@
     "kelime": "BAĞIMLILIK",
     "yasakli_kelimeler": [
       "ALIŞKANLIK",
-      "KONTROL EDEMEME",
+      "KONTROL",
       "MADDE",
       "İHTİYAÇ",
       "TUTKU"
@@ -1567,7 +1566,7 @@
     "kelime": "EKRAN SÜRESİ",
     "yasakli_kelimeler": [
       "TELEFON",
-      "KONTROL EDEMEMEK",
+      "ZAMAN",
       "UZUN",
       "BAĞIMLI",
       "UYGULAMA"
@@ -1578,7 +1577,7 @@
     "kelime": "EMPATİ",
     "yasakli_kelimeler": [
       "ANLAYIŞ",
-      "KENDİNİ YERİNE KOYMAK",
+      "YERİNE",
       "DUYGU",
       "HİSSETMEK",
       "ŞEFKAT"
@@ -1677,9 +1676,9 @@
     "kelime": "DÜRÜSTLÜK",
     "yasakli_kelimeler": [
       "DOĞRU",
-      "YALAN SÖYLEMEMEK",
+      "YALAN",
       "SAMİMİ",
-      "GÜVEN",
+      "GERÇEK",
       "AÇIK"
     ]
   },
@@ -1775,7 +1774,7 @@
     "id": 162,
     "kelime": "ÖZGÜVEN",
     "yasakli_kelimeler": [
-      "KENDİNE İNANMA",
+      "İNANÇ",
       "CESARET",
       "RAHATLIK",
       "EMİN",
@@ -2774,7 +2773,7 @@
   },
   {
     "id": 253,
-    "kelime": "ÇORBA İÇMEK",
+    "kelime": "ÇORBA",
     "yasakli_kelimeler": [
       "KAŞIK",
       "SICAK",
@@ -2931,7 +2930,7 @@
     "kelime": "BİLİNÇALTI",
     "yasakli_kelimeler": [
       "ZİHİN",
-      "FARKINDA OLMAMA",
+      "BEYİN",
       "RÜYA",
       "DERİN",
       "DÜŞÜNCE"
@@ -2965,7 +2964,7 @@
     "yasakli_kelimeler": [
       "KONTROL",
       "İRADE",
-      "KENDİNİ TUTMAK",
+      "KENDİ",
       "DİSİPLİN",
       "SINIR"
     ]
@@ -3258,13 +3257,13 @@
   },
   {
     "id": 297,
-    "kelime": "EKRANDA GEZİNMEK",
+    "kelime": "İNTERNET",
     "yasakli_kelimeler": [
-      "TELEFON",
-      "AŞAĞI",
-      "KAYDIRMAK",
-      "PARMAK",
-      "SOSYAL MEDYA"
+      "AĞ",
+      "ÇEVRİMİÇİ",
+      "MODEM",
+      "SİTE",
+      "BAĞLANTI"
     ]
   },
   {
@@ -4006,7 +4005,7 @@
   },
   {
     "id": 365,
-    "kelime": "SAKATLIK GEÇİRMEK",
+    "kelime": "SAKATLIK",
     "yasakli_kelimeler": [
       "SPORCU",
       "YARALANMAK",
@@ -4195,7 +4194,7 @@
     "id": 382,
     "kelime": "ZÜRAFA",
     "yasakli_kelimeler": [
-      "UZUN BOYUN",
+      "UZUN",
       "AFRİKA",
       "LEKE",
       "YAPRAK",
@@ -4231,8 +4230,8 @@
       "KUTUP",
       "YÜRÜYÜŞ",
       "BUZ",
-      "BALIK",
-      "SİYAH BEYAZ"
+      "BEYAZ",
+      "SİYAH"
     ]
   },
   {
@@ -4559,7 +4558,7 @@
     "kelime": "ÖRÜMCEK",
     "yasakli_kelimeler": [
       "AĞ",
-      "SEKİZ BACAK",
+      "SEKİZ",
       "BÖCEK",
       "ZEHİR",
       "KÖŞE"
@@ -4789,11 +4788,11 @@
     "id": 436,
     "kelime": "PANDA",
     "yasakli_kelimeler": [
-      "SİYAH BEYAZ",
+      "SİYAH",
       "BAMBU",
       "ÇİN",
       "AYI",
-      "TEMBEL"
+      "BEYAZ"
     ]
   },
   {
@@ -4924,7 +4923,7 @@
       "DENİZ",
       "KABUK",
       "KISKAÇ",
-      "KIRMIختی",
+      "KIRMIZI",
       "YEMEK"
     ]
   },
@@ -4988,7 +4987,7 @@
     "kelime": "GERGEDAN",
     "yasakli_kelimeler": [
       "BOYNUZ",
-      "KALIN DERİ",
+      "HAYVAN",
       "AFRİKA",
       "BÜYÜK",
       "SAVAN"
@@ -5263,7 +5262,7 @@
     "kelime": "SAHTE HESAP",
     "yasakli_kelimeler": [
       "PROFİL",
-      "GERÇEK OLMAYAN",
+      "GERÇEK",
       "KİMLİK",
       "SOSYAL MEDYA",
       "KOPYA"
@@ -5286,7 +5285,7 @@
     "yasakli_kelimeler": [
       "TELEFON",
       "SÜREKLİ",
-      "KONTROL EDEMEME",
+      "KONTROL",
       "EKRAN",
       "ZAMAN"
     ]
@@ -5491,13 +5490,13 @@
   },
   {
     "id": 500,
-    "kelime": "GRUP SOHBETİ",
+    "kelime": "MESAJ",
     "yasakli_kelimeler": [
-      "MESAJ",
-      "BİRDEN FAZLA",
+      "SMS",
+      "WHATSAPP",
       "TELEFON",
-      "YAZIŞMA",
-      "KATILIMCI"
+      "YAZIŞMAK",
+      "BİLDİRİM"
     ]
   },
   {
@@ -6372,7 +6371,7 @@
   {
     "kelime": "SÖZLEŞME",
     "yasakli_kelimeler": [
-      "IMZA",
+      "İMZA",
       "KAĞIT",
       "MADDELER",
       "ANLAŞMA",
@@ -6431,7 +6430,7 @@
       "BAŞKA",
       "YOL",
       "ÇÖZÜM",
-      "IKİNCİ"
+      "İKİNCİ"
     ],
     "id": 585
   }
