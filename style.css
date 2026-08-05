@@ -1,7 +1,3 @@
-:root {
-    --status-bar-height: 34px; /* Dynamically calculated by JS */
-}
-
 * {
     box-sizing: border-box;
     margin: 0;
@@ -10,7 +6,8 @@
 }
 
 html, body {
-    height: 100%;
+    height: 100vh;
+    height: 100dvh;
     width: 100%;
     background-color: #020617 !important;
     color: #f8fafc;
@@ -20,6 +17,7 @@ html, body {
     -webkit-user-select: none;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
 }
 
 body {
@@ -39,12 +37,24 @@ body {
     width: 100%;
     height: 100%;
     margin: 0 auto;
-    padding-top: max(var(--status-bar-height), env(safe-area-inset-top, var(--status-bar-height)));
+    padding-top: max(16px, env(safe-area-inset-top, 0px));
     padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
     padding-left: max(16px, env(safe-area-inset-left, 16px));
     padding-right: max(16px, env(safe-area-inset-right, 16px));
     justify-content: space-between;
     position: relative;
+}
+
+#countdown-overlay, 
+#pause-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-row-label label {
+    margin-bottom: 0;
 }
 
 .screen {
@@ -92,7 +102,7 @@ input[type="text"] {
     border: 1px solid rgba(51, 65, 85, 0.8);
     border-radius: 12px;
     padding: clamp(8px, 2.2vh, 12px) 14px;
-    font-size: clamp(13px, 3.8vw, 15px);
+    font-size: clamp(16px, 3.8vw, 17px);
     font-weight: 700;
     outline: none;
     transition: border-color 0.25s ease, box-shadow 0.25s ease;
@@ -354,7 +364,7 @@ input[type="range"].range-red::-webkit-slider-thumb {
     justify-content: center;
     background-color: #020617;
     padding: 24px;
-    padding-top: max(var(--status-bar-height), env(safe-area-inset-top, var(--status-bar-height)));
+    padding-top: max(16px, env(safe-area-inset-top, 0px));
     text-align: center;
     transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: opacity, transform;
@@ -400,7 +410,7 @@ input[type="range"].range-red::-webkit-slider-thumb {
     background: linear-gradient(90deg, #ef4444, #f59e0b, #fde047);
     border-radius: 10px;
     box-shadow: 0 0 14px rgba(245, 158, 11, 0.9);
-    animation: splashBarFill 1.35s cubic-bezier(0.4, 0, 0.2, 1) 0.75s forwards;
+    animation: splashBarFill 1s cubic-bezier(0.4, 0, 0.2, 1) 0.75s forwards;
 }
 
 @keyframes countPopAnim {
