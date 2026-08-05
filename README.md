@@ -1,6 +1,6 @@
 # Taboo Word Game 🎲
 
-A modern, fully customizable, web-based Taboo party game designed for game nights. This digital adaptation of the classic word-guessing board game offers highly flexible game configurations and an essential quality-of-life features that set it apart from traditional alternatives.
+A modern, fully customizable, web-based Taboo party game designed for game nights. This digital adaptation of the classic word-guessing board game offers highly flexible game configurations and essential quality-of-life features that set it apart from traditional alternatives.
 
 🚀 **<a href="https://tabutr.vercel.app" target="_blank" rel="noopener noreferrer">Live Demo</a>**
 
@@ -17,7 +17,7 @@ A modern, fully customizable, web-based Taboo party game designed for game night
 
 ## 🚀 Key Features
 
-* **Extensive Word Database:** Contains 585 unique Turkish words, each featuring 5 strictly forbidden taboo words.
+* **Extensive Word Database:** Contains 500+ unique Turkish words, each featuring 5 strictly forbidden taboo words.
 * **The "Undo" Button (Unique Feature):** Accidentally clicked "Correct" instead of "Taboo"? Unlike most market alternatives, this game includes a rewind button to fix accidental clicks instantly without ruining the score or state.
 * **Highly Customizable Gameplay:** Fully adjust the game rules before you start:
   * **Custom Team Names:** Personalize your team identity (e.g., Red Team vs Blue Team).
@@ -29,25 +29,31 @@ A modern, fully customizable, web-based Taboo party game designed for game night
 
 ---
 
-## 🗺️ Roadmap & Future Goals
+## 🛠️ Project Structure
 
-> ⚠️ **Current Status:** The application is currently optimized and available **exclusively in Turkish**.
-
-* [x] **Dynamic Undo System:** Ability to rewind misclicks during live gameplay.
-* [ ] **English Language Support:** Multi-language system localization and a comprehensive English word database.
-* [ ] **Interactive Round Review UI:** Allow players to modify card results (toggle between Correct, Taboo, and Pass) retroactively on the post-round summary screen to fix referee errors.
+```text
+├── scripts/
+│   └── delete_cards.py  # Automation tool to manage and re-index cards dataset
+├── index.html           # Main layout and settings UI
+├── style.css            # UI design and animations
+├── app.js               # Core game state, timer and score logic
+├── cards.js             # 500+ Turkish taboo cards dataset (with 5 forbidden words each)
+├── README.md            # Documentation
+└── LICENSE
+```
 
 ---
 
-## 🛠️ Tech Stack & Project Structure
+## 🛠️ Developer & Maintenance Tools
 
-```text
-├── index.html   # Main layout and settings UI
-├── style.css    # UI design and animations
-├── app.js       # Core game state, timer and score logic
-├── cards.js     # 500+ Turkish taboo cards dataset (with 5 forbidden words each)
-├── LICENSE
-└── README.md    # Documentation
+A Python automation script is included in the `scripts/` directory to help manage and maintain the dataset.
+
+### ✂️ Card Manager Script (`delete_cards.py`)
+Allows removing specific cards by ID and automatically re-indexing the remaining card IDs sequentially from 1 to keep the dataset structure consistent.
+
+**Usage:**
+```bash
+python scripts/delete_cards.py
 ```
 
 ---
@@ -62,6 +68,16 @@ A modern, fully customizable, web-based Taboo party game designed for game night
    * Press **PAS** to skip the current word.
    * Press **Geri Al (Undo)** if you misclicked any button to restore the previous card and score.
 4. **Win:** The team with the highest score at the end of all rounds wins the trophy!
+
+---
+
+## 🗺️ Roadmap & Future Goals
+
+> ⚠️ **Current Status:** The application is currently optimized and available **exclusively in Turkish**.
+
+* [x] **Dynamic Undo System:** Ability to rewind misclicks during live gameplay.
+* [ ] **English Language Support:** Multi-language system localization and a comprehensive English word database.
+* [ ] **Interactive Round Review UI:** Allow players to modify card results (toggle between Correct, Taboo, and Pass) retroactively on the post-round summary screen to fix referee errors.
 
 ---
 
