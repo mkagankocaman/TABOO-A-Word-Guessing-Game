@@ -3246,7 +3246,7 @@
 },
 {
   "id": 296,
-  "kelime": "YAYIN PLATFORMU",
+  "kelime": "NETFLIX",
   "yasakli_kelimeler": [
     "DİZİ",
     "FİLM",
@@ -3273,7 +3273,7 @@
     "SAÇ",
     "MAKAS",
     "TIRAŞ",
-    "SALON",
+    "KUAFÖR",
     "AYNA"
   ]
 },
@@ -3877,7 +3877,7 @@
   "yasakli_kelimeler": [
     "HAKEM",
     "FAUL",
-    "OYUNCU",
+    "SARI,
     "CEZA",
     "FUTBOL"
   ]
@@ -3931,7 +3931,7 @@
   "kelime": "KUAFÖR",
   "yasakli_kelimeler": [
     "SAÇ",
-    "SALON",
+    "BERBER",
     "FÖN",
     "BOYA",
     "MAKAS"
@@ -4104,7 +4104,7 @@
 },
 {
   "id": 374,
-  "kelime": "DEPLASMAN MAÇI",
+  "kelime": "DEPLASMAN",
   "yasakli_kelimeler": [
     "FUTBOL",
     "TAKIM",
@@ -4401,13 +4401,13 @@
 },
 {
   "id": 401,
-  "kelime": "HAKEM DÜDÜĞÜ",
+  "kelime": "DÜDÜK",
   "yasakli_kelimeler": [
     "MAÇ",
     "SES",
     "DURDURMAK",
     "FAUL",
-    "SAHA"
+    "FUTBOL"
   ]
 },
 {
@@ -4665,12 +4665,12 @@
 },
 {
   "id": 425,
-  "kelime": "PENALTI ATIŞLARI",
+  "kelime": "FORVET",
   "yasakli_kelimeler": [
-    "KALECİ",
+    "FUTBOL",
     "VURUŞ",
-    "BERABERLİK",
-    "SERİ",
+    "ŞUT",
+    "KALE",
     "GOL"
   ]
 },
