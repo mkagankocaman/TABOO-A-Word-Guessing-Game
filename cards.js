@@ -3877,7 +3877,7 @@
   "yasakli_kelimeler": [
     "HAKEM",
     "FAUL",
-    "SARI,
+    "SARI",
     "CEZA",
     "FUTBOL"
   ]
