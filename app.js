@@ -175,12 +175,19 @@ setTimeout(() => {
 
 
 function shuffleCardPool() {
-  gameState.availableCards = [...ALL_CARDS];
-  for (let i = gameState.availableCards.length - 1; i > 0; i--) {
+  const excludedCard = gameState.currentCard;
+  const pool = ALL_CARDS.filter(card => card !== excludedCard);
+  
+  for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [gameState.availableCards[i], gameState.availableCards[j]] = [gameState.availableCards[j], gameState.availableCards[i]];
+    [pool[i], pool[j]] = [pool[j], pool[i]];
   }
+  if (excludedCard) {
+  pool.unshift(excludedCard);
+  }
+  gameState.availableCards = pool;
 }
+
 
 function showScreen(screenName) {
   Object.keys(screens).forEach(key => {
