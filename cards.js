@@ -6,7 +6,7 @@
     "MARKET",
     "YAZMAK",
     "EKSİK",
-    "ALMAK",
+    "İHTİYAÇ",
     "KAĞIT"
   ]
 },
@@ -27,7 +27,7 @@
   "yasakli_kelimeler": [
     "KİBİR",
     "GURUR",
-    "KENDİNİ BEĞENMEK",
+    "EGO",
     "ŞIMARMAK",
     "BÖBÜRLENMEK"
   ]
@@ -180,7 +180,7 @@
   "kelime": "GÜNDEM",
   "yasakli_kelimeler": [
     "SON DAKİKA",
-    "TWİTTER",
+    "TWITTER",
     "KONUŞULAN",
     "ETİKET",
     "POPÜLER"
@@ -258,7 +258,7 @@
   "yasakli_kelimeler": [
     "DİNLEMEMEK",
     "ÖNEMSEMEMEK",
-    "GÖRMEZDEN",
+    "BOŞVERMEK",
     "UMURSAMAMAK",
     "DİKKAT"
   ]
@@ -458,7 +458,7 @@
     "SİNİR",
     "ÖFKE",
     "FENALAŞMAK",
-    "BAŞ DÖNMESİ"
+    "SERSEMLEMEK"
   ]
 },
 {
@@ -619,7 +619,7 @@
   "id": 57,
   "kelime": "AYAĞI ALIŞMAK",
   "yasakli_kelimeler": [
-    "SIK GELMEK",
+    "SIK",
     "ALIŞKANLIK",
     "ZİYARET",
     "TEKRAR",
@@ -650,12 +650,12 @@
 },
 {
   "id": 60,
-  "kelime": "GÖZÜNÜ KIRPMADAN",
+  "kelime": "GÖZÜ PEK",
   "yasakli_kelimeler": [
-    "KORKUSUZCA",
-    "CESARET",
-    "DURAKSAMADAN",
-    "HIZLI",
+    "KORKUSUZ",
+    "CESUR",
+    "TEHLİKE",
+    "ATILGAN",
     "TEREDDÜTSÜZ"
   ]
 },
@@ -1015,7 +1015,7 @@
   "id": 93,
   "kelime": "GÖZÜ AÇILMAK",
   "yasakli_kelimeler": [
-    "FARKINA VARMAK",
+    "KANDIRMAK",
     "ANLAMAK",
     "UYANMAK",
     "GERÇEK",
@@ -1035,13 +1035,13 @@
 },
 {
   "id": 95,
-  "kelime": "FOTOĞRAF RÖTUŞU",
+  "kelime": "DEJAVU",
   "yasakli_kelimeler": [
-    "DÜZELTME",
-    "PROGRAM",
-    "YÜZ",
-    "GÜZELLEŞTİRME",
-    "RESİM"
+    "YAŞAMAK",
+    "AN",
+    "GEÇMİŞ",
+    "HİSSETMEK",
+    "TEKRAR"
   ]
 },
 {
@@ -1358,9 +1358,9 @@
   "yasakli_kelimeler": [
     "KARANLIK",
     "MUM",
-    "ANİ",
+    "IŞIK",
     "EV",
-    "BEKLEME"
+    "BEKLEMEK"
   ]
 },
 {
@@ -1376,13 +1376,13 @@
 },
 {
   "id": 126,
-  "kelime": "GURUR",
+  "kelime": "POT KIRMAK",
   "yasakli_kelimeler": [
-    "ONUR",
-    "KİBİR",
-    "BAŞARI",
-    "DEĞER",
-    "KENDİNİ BEĞENME"
+    "ÇAM",
+    "İSTEMEDEN",
+    "MAHVETMEK",
+    "YANLIŞLIKLA",
+    "SÖYLEMEK"
   ]
 },
 {
@@ -1391,7 +1391,7 @@
   "yasakli_kelimeler": [
     "MUSLUK",
     "EV",
-    "BEKLEME",
+    "BEKLEMEK",
     "DEPO",
     "AKMAMAK"
   ]
@@ -1448,7 +1448,7 @@
     "GÜVEN",
     "VEFA",
     "İHANET",
-    "SÖZÜNDE DURMAK"
+    "DOSTLUK"
   ]
 },
 {
@@ -1519,13 +1519,13 @@
 },
 {
   "id": 139,
-  "kelime": "SÜPERMARKET KUYRUĞU",
+  "kelime": "KASA",
   "yasakli_kelimeler": [
-    "KASA",
-    "BEKLEMEK",
-    "SIRA",
-    "ÜRÜN",
-    "ALIŞVERİŞ"
+    "PARA",
+    "SAKLAMAK",
+    "ÖDEMEK",
+    "RESTORAN",
+    "MARKET"
   ]
 },
 {
@@ -1577,7 +1577,7 @@
   "kelime": "EMPATİ",
   "yasakli_kelimeler": [
     "ANLAYIŞ",
-    "YERİNE",
+    "PSİKOLOJİ",
     "DUYGU",
     "HİSSETMEK",
     "ŞEFKAT"
@@ -1743,8 +1743,8 @@
   "yasakli_kelimeler": [
     "ÜZÜNTÜ",
     "BEKLENTİ",
-    "BOŞA ÇIKMA",
-    "UMUTSUZLUK",
+    "YIKILMAK",
+    "UMUT",
     "DÜŞ"
   ]
 },
@@ -1884,7 +1884,7 @@
   "id": 172,
   "kelime": "TATİL DÖNÜŞÜ",
   "yasakli_kelimeler": [
-    "EVE",
+    "EV",
     "YORGUNLUK",
     "VALİZ",
     "BİTMEK",
@@ -2116,7 +2116,7 @@
   "kelime": "İSKENDER",
   "yasakli_kelimeler": [
     "DÖNER",
-    "TEREYAĞ",
+    "TEREYAĞI",
     "YOĞURT",
     "DOMATES",
     "EKMEK"
@@ -2137,7 +2137,7 @@
   "id": 195,
   "kelime": "ÖNYARGI",
   "yasakli_kelimeler": [
-    "PEŞİN HÜKÜM",
+    "HÜKÜM",
     "YANLIŞ",
     "DÜŞÜNCE",
     "ETİKETLEME",
