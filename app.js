@@ -1,26 +1,37 @@
+/**
+ * TABOO WORD GAME - CORE APPLICATION LOGIC
+ */
+
+// ==========================================================================
 // 🔊 ÇEVRİMDIŞI WEB AUDIO API SES SENTEZLEYİCİ
+// ==========================================================================
 class SoundFX {
   constructor() {
     this.ctx = null;
+    this.isUnlocked = false;
   }
 
   init() {
     try {
       if (!this.ctx) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (AudioContext) {
-          this.ctx = new AudioContext();
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          this.ctx = new AudioContextClass();
         }
       }
       if (this.ctx && this.ctx.state === 'suspended') {
         this.ctx.resume();
       }
-    } catch(e) {}
+      this.isUnlocked = true;
+    } catch (e) {
+      console.warn("Web Audio API not supported or blocked", e);
+    }
   }
 
   playTone(freq, type = 'sine', duration = 0.1, gainVal = 0.1) {
     if (!this.ctx) return;
     try {
+      if (this.ctx.state === 'suspended') this.ctx.resume();
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = type;
@@ -31,7 +42,7 @@ class SoundFX {
       gain.connect(this.ctx.destination);
       osc.start();
       osc.stop(this.ctx.currentTime + duration);
-    } catch(e) {}
+    } catch (e) {}
   }
 
   playCountdownTick() {
@@ -43,26 +54,27 @@ class SoundFX {
     const notes = [523.25, 659.25, 783.99, 1046.50];
     notes.forEach((freq, idx) => {
       setTimeout(() => {
-        this.playTone(freq, 'triangle', 0.25, 0.15);
-      }, idx * 70);
+        this.playTone(freq, 'triangle', 0.22, 0.15);
+      }, idx * 60);
     });
   }
 
   playCorrect() {
     if (!this.ctx) return;
-    this.playTone(523.25, 'sine', 0.1, 0.15);
-    setTimeout(() => this.playTone(659.25, 'sine', 0.18, 0.15), 90);
+    this.playTone(523.25, 'sine', 0.09, 0.15);
+    setTimeout(() => this.playTone(659.25, 'sine', 0.16, 0.15), 70);
   }
 
   playTabu() {
     if (!this.ctx) return;
-    this.playTone(140, 'sawtooth', 0.25, 0.2);
+    this.playTone(140, 'sawtooth', 0.22, 0.2);
   }
 
   playPassWhoosh() {
     if (!this.ctx) return;
     try {
-      const bufferSize = this.ctx.sampleRate * 0.18;
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      const bufferSize = this.ctx.sampleRate * 0.15;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) {
@@ -73,19 +85,19 @@ class SoundFX {
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'bandpass';
       filter.frequency.setValueAtTime(300, this.ctx.currentTime);
-      filter.frequency.exponentialRampToValueAtTime(1400, this.ctx.currentTime + 0.15);
+      filter.frequency.exponentialRampToValueAtTime(1400, this.ctx.currentTime + 0.13);
       filter.Q.value = 3;
 
       const gain = this.ctx.createGain();
       gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
 
       noise.connect(filter);
       filter.connect(gain);
       gain.connect(this.ctx.destination);
       noise.start();
-    } catch(e) {
-      this.playTone(400, 'sine', 0.15, 0.1);
+    } catch (e) {
+      this.playTone(400, 'sine', 0.12, 0.1);
     }
   }
 
@@ -94,16 +106,23 @@ class SoundFX {
     const notes = [659.25, 523.25, 392.00];
     notes.forEach((freq, idx) => {
       setTimeout(() => {
-        this.playTone(freq, 'sine', 0.12, 0.15);
-      }, idx * 60);
+        this.playTone(freq, 'sine', 0.1, 0.15);
+      }, idx * 50);
     });
   }
 }
 
 const soundFX = new SoundFX();
 
-// OYUN DURUM DEĞİŞKENLERİ
-let gameState = {
+// ==========================================================================
+// 📦 KALICI KART HAVUZU & OYUN DURUMU (STORAGE & STATE)
+// ==========================================================================
+const STORAGE_KEYS = {
+  SETTINGS: 'taboo_game_settings',
+  PLAYED_CARDS: 'taboo_played_card_ids'
+};
+
+const gameState = {
   teams: [
     { name: "Kırmızı Takım", score: 0 },
     { name: "Mavi Takım", score: 0 }
@@ -114,22 +133,33 @@ let gameState = {
   tabuPenalty: 1,
   passLimit: 3,
   currentRound: 1,
-  availableCards: [],
   
-  // Tur İçi Değişkenler
-  turnPassesLeft: 3,
-  turnStats: { correct: 0, tabu: 0},
-  turnHistory: [],
+  // Deste Yönetimi
+  availableCards: [],
+  playedCardIds: new Set(),
   currentCard: null,
+
+  // Tur İçi Durumlar
+  turnPassesLeft: 3,
+  turnStats: { correct: 0, tabu: 0 },
+  turnHistory: [],
   lastAction: null,
   timeLeft: 60,
+  turnEndTime: 0,
   timerInterval: null,
+  
+  // Duraklatma Durumu: 'none' | 'manual' | 'undo'
+  pauseReason: 'none',
   isPaused: false,
-  timerPathLength: 236,
-  isAnimating: false
+  
+  // Animasyon ve Sayaç
+  isAnimating: false,
+  animationTimeout1: null,
+  animationTimeout2: null,
+  timerPathLength: 236
 };
 
-// DOM ELEMENTLERİ
+// DOM EKRANLARI
 const screens = {
   setup: document.getElementById("screen-setup"),
   ready: document.getElementById("screen-ready"),
@@ -138,56 +168,154 @@ const screens = {
   gameover: document.getElementById("screen-gameover")
 };
 
-// UYGULAMA BAŞLANGICI
+// ==========================================================================
+// 🚀 UYGULAMA BAŞLANGICI VE ETKİLEŞİM TANIMLAMALARI
+// ==========================================================================
 window.addEventListener("DOMContentLoaded", () => {
-  //PREVENT PINCH-ZOOM
+  // Safari / Mobil Ses Kilidi Açma (İlk Dokunuşta Sessiz Resume)
+  const unlockAudio = () => {
+    soundFX.init();
+    window.removeEventListener('pointerdown', unlockAudio);
+    window.removeEventListener('touchstart', unlockAudio);
+  };
+  window.addEventListener('pointerdown', unlockAudio, { passive: true });
+  window.addEventListener('touchstart', unlockAudio, { passive: true });
+
+  // Çift dokunma ve pinch-zoom engeli
   document.addEventListener('gesturestart', (e) => e.preventDefault());
   document.addEventListener('touchmove', (e) => {
     if (e.touches.length > 1) e.preventDefault();
-  }, {passive: false});
+  }, { passive: false });
 
+  loadSavedSettings();
+  initDeckPool();
   initSetupScreen();
-  shuffleCardPool();
   
   const timerBorder = document.getElementById("timer-border");
   if (timerBorder) {
     try {
       const len = timerBorder.getTotalLength();
       if (len > 0) gameState.timerPathLength = len;
-    } catch(e) {}
+    } catch (e) {}
     timerBorder.style.strokeDasharray = gameState.timerPathLength;
   }
 
-  // Splash Bar Dolduğu An HİÇ BEKLEMEDEN Açılış Ekranını Kapat
+  // Açılış Splash Ekranını Kapat
   setTimeout(() => {
-const splash = document.getElementById("splash-screen");
-if (splash) {
-splash.style.opacity = "0";
-splash.style.pointerEvents = "none";
-splash.style.transform = "scale(1.02) translateY(-6px)";
-setTimeout(() => {
-  splash.classList.add("hidden");
-}, 350);
-}
-}, 1500); 
+    const splash = document.getElementById("splash-screen");
+    if (splash) {
+      splash.style.opacity = "0";
+      splash.style.pointerEvents = "none";
+      splash.style.transform = "scale(1.02) translateY(-6px)";
+      setTimeout(() => splash.classList.add("hidden"), 350);
+    }
+  }, 1400);
 });
 
+// ==========================================================================
+// 🃏 DESTE VE KART YÖNETİMİ (PERSISTENT DECK POOL)
+// ==========================================================================
+function initDeckPool(forceReset = false) {
+  try {
+    if (forceReset) {
+      localStorage.removeItem(STORAGE_KEYS.PLAYED_CARDS);
+      gameState.playedCardIds = new Set();
+    } else {
+      const saved = localStorage.getItem(STORAGE_KEYS.PLAYED_CARDS);
+      gameState.playedCardIds = saved ? new Set(JSON.parse(saved)) : new Set();
+    }
+  } catch (e) {
+    gameState.playedCardIds = new Set();
+  }
 
+  // Oynanmamış kartları filtrele
+  let pool = ALL_CARDS.filter(c => !gameState.playedCardIds.has(c.id));
 
-function shuffleCardPool() {
-  const excludedCard = gameState.currentCard;
-  const pool = ALL_CARDS.filter(card => card !== excludedCard);
-  
+  // Eğer tüm kartlar bittiyse desteyi otomatik sıfırla
+  if (pool.length === 0) {
+    gameState.playedCardIds.clear();
+    localStorage.removeItem(STORAGE_KEYS.PLAYED_CARDS);
+    pool = [...ALL_CARDS];
+  }
+
+  // Fisher-Yates Karıştırma
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  if (excludedCard) {
-  pool.unshift(excludedCard);
-  }
+
   gameState.availableCards = pool;
+  updateDeckUI();
 }
 
+function markCardAsPlayed(card) {
+  if (!card || !card.id) return;
+  gameState.playedCardIds.add(card.id);
+  try {
+    localStorage.setItem(STORAGE_KEYS.PLAYED_CARDS, JSON.stringify([...gameState.playedCardIds]));
+  } catch (e) {}
+  updateDeckUI();
+}
+
+function unmarkCardAsPlayed(card) {
+  if (!card || !card.id) return;
+  gameState.playedCardIds.delete(card.id);
+  try {
+    localStorage.setItem(STORAGE_KEYS.PLAYED_CARDS, JSON.stringify([...gameState.playedCardIds]));
+  } catch (e) {}
+  updateDeckUI();
+}
+
+function updateDeckUI() {
+  const el = document.getElementById("deck-remaining-count");
+  if (el) {
+    el.textContent = gameState.availableCards ? gameState.availableCards.length : ALL_CARDS.length;
+  }
+}
+
+// ==========================================================================
+// ⚙️ AYARLAR YÖNETİMİ VE KAYDETME
+// ==========================================================================
+function loadSavedSettings() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+    if (!saved) return;
+    const s = JSON.parse(saved);
+
+    if (s.team1) document.getElementById("team1-name").value = s.team1;
+    if (s.team2) document.getElementById("team2-name").value = s.team2;
+    if (s.time) {
+      document.getElementById("input-time").value = s.time;
+      document.getElementById("time-val").textContent = `${s.time} saniye`;
+    }
+    if (s.rounds) {
+      document.getElementById("input-rounds").value = s.rounds;
+      document.getElementById("rounds-val").textContent = `${s.rounds} Tur`;
+    }
+    if (s.tabuPenalty) {
+      document.getElementById("input-tabu-penalty").value = s.tabuPenalty;
+      document.getElementById("tabu-penalty-val").textContent = `-${s.tabuPenalty} Puan`;
+    }
+    if (s.passLimit !== undefined) {
+      document.getElementById("input-pass-limit").value = s.passLimit;
+      document.getElementById("pass-limit-val").textContent = `${s.passLimit} Pas`;
+    }
+  } catch (e) {}
+}
+
+function saveCurrentSettings() {
+  try {
+    const s = {
+      team1: document.getElementById("team1-name").value.trim(),
+      team2: document.getElementById("team2-name").value.trim(),
+      time: parseInt(document.getElementById("input-time").value),
+      rounds: parseInt(document.getElementById("input-rounds").value),
+      tabuPenalty: parseInt(document.getElementById("input-tabu-penalty").value),
+      passLimit: parseInt(document.getElementById("input-pass-limit").value)
+    };
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(s));
+  } catch (e) {}
+}
 
 function showScreen(screenName) {
   Object.keys(screens).forEach(key => {
@@ -202,7 +330,6 @@ function showScreen(screenName) {
   });
 }
 
-// AYARLAR EKRANI
 function initSetupScreen() {
   const inputTime = document.getElementById("input-time");
   const timeVal = document.getElementById("time-val");
@@ -212,14 +339,22 @@ function initSetupScreen() {
   const tabuPenaltyVal = document.getElementById("tabu-penalty-val");
   const inputPassLimit = document.getElementById("input-pass-limit");
   const passLimitVal = document.getElementById("pass-limit-val");
+  const btnResetDeck = document.getElementById("btn-reset-deck");
 
   inputTime.addEventListener("input", (e) => timeVal.textContent = `${e.target.value} saniye`);
   inputRounds.addEventListener("input", (e) => roundsVal.textContent = `${e.target.value} Tur`);
   inputTabuPenalty.addEventListener("input", (e) => tabuPenaltyVal.textContent = `-${e.target.value} Puan`);
   inputPassLimit.addEventListener("input", (e) => passLimitVal.textContent = `${e.target.value} Pas`);
 
+  btnResetDeck.addEventListener("click", () => {
+    initDeckPool(true);
+    btnResetDeck.textContent = "Sıfırlandı!";
+    setTimeout(() => btnResetDeck.textContent = "Desteyi Yenile", 1200);
+  });
+
   document.getElementById("btn-start-game").addEventListener("click", () => {
     soundFX.init();
+    saveCurrentSettings();
 
     const team1 = document.getElementById("team1-name").value.trim() || "Kırmızı Takım";
     const team2 = document.getElementById("team2-name").value.trim() || "Mavi Takım";
@@ -237,11 +372,18 @@ function initSetupScreen() {
     gameState.currentRound = 1;
     gameState.currentTeamIndex = 0;
 
+    // Destede yeterli kart yoksa tazele
+    if (gameState.availableCards.length === 0) {
+      initDeckPool(false);
+    }
+
     prepareReadyScreen();
   });
 }
 
-// TUR HAZIRLIK EKRANI
+// ==========================================================================
+// 🚩 TUR HAZIRLIK VE 3-2-1 GERİ SAYIM
+// ==========================================================================
 function prepareReadyScreen() {
   const activeTeam = gameState.teams[gameState.currentTeamIndex];
 
@@ -259,7 +401,6 @@ function prepareReadyScreen() {
   showScreen("ready");
 }
 
-// 3-2-1 GERİ SAYIM ANİMASYONU
 function runCountdown(callback) {
   soundFX.init();
 
@@ -306,7 +447,7 @@ function runCountdown(callback) {
       overlay.classList.add("hidden");
       callback();
     }
-  }, 900);
+  }, 850);
 }
 
 document.getElementById("btn-start-turn").addEventListener("click", () => {
@@ -315,23 +456,51 @@ document.getElementById("btn-start-turn").addEventListener("click", () => {
   });
 });
 
-// TURU BAŞLAT
-function startTurn() {
-  gameState.turnPassesLeft = gameState.passLimit;
-  gameState.turnStats = { correct: 0, tabu: 0};
+// ==========================================================================
+// ⏱️ SAYAÇ VE AKTİF OYUN DÖNGÜSÜ
+// ==========================================================================
+function clearAnimationTimeouts() {
+  if (gameState.animationTimeout1) clearTimeout(gameState.animationTimeout1);
+  if (gameState.animationTimeout2) clearTimeout(gameState.animationTimeout2);
+  gameState.animationTimeout1 = null;
+  gameState.animationTimeout2 = null;
+  gameState.isAnimating = false;
+  
+  const cardCard = document.getElementById("card-card");
+  if (cardCard) {
+    cardCard.classList.remove("anim-correct", "anim-tabu", "anim-pass", "anim-undo");
+  }
+}
+
+function resetActiveTurnState() {
+  clearInterval(gameState.timerInterval);
+  clearAnimationTimeouts();
+
+  gameState.isPaused = false;
+  gameState.pauseReason = 'none';
+  gameState.turnStats = { correct: 0, tabu: 0 };
   gameState.turnHistory = [];
   gameState.lastAction = null;
+  
+  const pauseOverlay = document.getElementById("pause-overlay");
+  if (pauseOverlay) pauseOverlay.classList.add("hidden");
+  
+  const timerBox = document.getElementById("timer-box");
+  if (timerBox) {
+    timerBox.classList.remove("timer-paused-glow", "timer-warning");
+  }
+}
+
+function startTurn() {
+  resetActiveTurnState();
+
+  gameState.turnPassesLeft = gameState.passLimit;
   gameState.timeLeft = gameState.turnDuration;
-  gameState.isPaused = false;
-  gameState.isAnimating = false;
 
   const activeTeam = gameState.teams[gameState.currentTeamIndex];
   document.getElementById("play-team-name").textContent = activeTeam.name;
   document.getElementById("play-team-badge").style.background = gameState.currentTeamIndex === 0 ? '#ef4444' : '#3b82f6';
-
   document.getElementById("label-tabu-btn").textContent = `TABU (-${gameState.tabuPenalty})`;
-
-  document.getElementById("timer-box").classList.remove("timer-paused-glow");
 
   updateUndoButtonUI();
   updateTurnStatsUI();
@@ -341,7 +510,6 @@ function startTurn() {
   startTimer();
 }
 
-// SAYAÇ VE ÇERÇEVE ANİMASYONU
 function updateTimerUI() {
   const timerEl = document.getElementById("play-timer");
   const timerBorder = document.getElementById("timer-border");
@@ -351,7 +519,7 @@ function updateTimerUI() {
   timerEl.textContent = gameState.timeLeft;
 
   if (timerBorder && gameState.timerPathLength > 0) {
-    const progress = gameState.timeLeft / gameState.turnDuration;
+    const progress = Math.max(0, gameState.timeLeft / gameState.turnDuration);
     const offset = gameState.timerPathLength * (1 - progress);
     timerBorder.style.strokeDashoffset = offset;
 
@@ -375,49 +543,78 @@ function updateTimerUI() {
 
 function startTimer() {
   clearInterval(gameState.timerInterval);
+  gameState.turnEndTime = Date.now() + (gameState.timeLeft * 1000);
   updateTimerUI();
 
   gameState.timerInterval = setInterval(() => {
     if (!gameState.isPaused) {
-      gameState.timeLeft--;
-      updateTimerUI();
+      const remaining = Math.max(0, Math.ceil((gameState.turnEndTime - Date.now()) / 1000));
+      
+      if (remaining !== gameState.timeLeft) {
+        gameState.timeLeft = remaining;
+        updateTimerUI();
+      }
 
       if (gameState.timeLeft <= 0) {
         endTurn();
       }
     }
-  }, 1000);
+  }, 200);
 }
 
-// PAUSE / RESUME / ANA MENÜ
+// ==========================================================================
+// ⏸️ DURAKLATMA (PAUSE) VE GERİ AL (UNDO) ENTEGRASYONU
+// ==========================================================================
 const btnPause = document.getElementById("btn-pause");
 const pauseOverlay = document.getElementById("pause-overlay");
 const btnResume = document.getElementById("btn-resume");
 const btnMainMenu = document.getElementById("btn-main-menu");
 
-function togglePause() {
-  gameState.isPaused = !gameState.isPaused;
-  if (gameState.isPaused) {
-    pauseOverlay.classList.remove("hidden");
-    document.getElementById("timer-box").classList.add("timer-paused-glow");
-  } else {
-    pauseOverlay.classList.add("hidden");
-    document.getElementById("timer-box").classList.remove("timer-paused-glow");
-  }
+function pauseGameManually() {
+  gameState.isPaused = true;
+  gameState.pauseReason = 'manual';
+  clearInterval(gameState.timerInterval);
+  pauseOverlay.classList.remove("hidden");
+  document.getElementById("timer-box").classList.add("timer-paused-glow");
 }
 
-btnPause.addEventListener("click", togglePause);
-btnResume.addEventListener("click", togglePause);
-
-btnMainMenu.addEventListener("click", () => {
-  clearInterval(gameState.timerInterval);
+function resumeGame() {
   gameState.isPaused = false;
+  gameState.pauseReason = 'none';
   pauseOverlay.classList.add("hidden");
   document.getElementById("timer-box").classList.remove("timer-paused-glow");
+  startTimer();
+}
+
+btnPause.addEventListener("click", () => {
+  if (gameState.isPaused && gameState.pauseReason === 'manual') {
+    resumeGame();
+  } else {
+    pauseGameManually();
+  }
+});
+
+btnResume.addEventListener("click", resumeGame);
+
+btnMainMenu.addEventListener("click", () => {
+  resetActiveTurnState();
+  updateDeckUI();
   showScreen("setup");
 });
 
-// KART ANIMASYON TETİKLEYİCİSİ
+// Aksiyon butonlarına basıldığında, eğer sadece Undo yüzünden duraklatılmışsa süreyi devam ettir
+function resumeIfPausedByUndo() {
+  if (gameState.isPaused && gameState.pauseReason === 'undo') {
+    gameState.isPaused = false;
+    gameState.pauseReason = 'none';
+    document.getElementById("timer-box").classList.remove("timer-paused-glow");
+    startTimer();
+  }
+}
+
+// ==========================================================================
+// 🎴 KART ANİMASYONLARI VE KART ÇEKME
+// ==========================================================================
 function triggerCardAnimation(animClass, callback) {
   if (gameState.isAnimating) return;
   gameState.isAnimating = true;
@@ -427,28 +624,30 @@ function triggerCardAnimation(animClass, callback) {
   void cardCard.offsetWidth;
   cardCard.classList.add(animClass);
 
-  setTimeout(() => {
-    if (typeof callback === "function") callback(); //run if there is callback
-  }, 180);
+  // 100ms sonra kart içeriğini değiştir
+  gameState.animationTimeout1 = setTimeout(() => {
+    if (typeof callback === "function") callback();
+  }, 100);
 
-  setTimeout(() => {
+  // 260ms sonra animasyon kilidini aç
+  gameState.animationTimeout2 = setTimeout(() => {
     cardCard.classList.remove(animClass);
     gameState.isAnimating = false;
-  }, 500);
+  }, 260);
 }
 
-// KART ALMA
 function nextCard() {
   if (gameState.availableCards.length === 0) {
-    shuffleCardPool();
+    initDeckPool(false);
   }
 
   gameState.currentCard = gameState.availableCards.pop();
+  updateDeckUI();
   renderCard(gameState.currentCard);
 }
 
-// KART ÇİZİMİ
 function renderCard(card) {
+  if (!card) return;
   document.getElementById("card-word").textContent = card.kelime;
 
   const forbiddenContainer = document.getElementById("card-forbidden");
@@ -456,13 +655,15 @@ function renderCard(card) {
 
   card.yasakli_kelimeler.forEach(word => {
     const item = document.createElement("div");
-    item.style.cssText = "background: rgba(2,6,23,0.9); border: 1px solid rgba(239,68,68,0.25); color: #f1f5f9; font-weight: 800; font-size: clamp(12px, 3.8vw, 15px); text-align: center; padding: clamp(6px, 1.6vh, 9px); border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px;";
+    item.className = "forbidden-word-item";
     item.textContent = word;
     forbiddenContainer.appendChild(item);
   });
 }
 
-// GERİ AL (UNDO) BUTON DURUMU
+// ==========================================================================
+// ↩️ GERİ AL (UNDO) İŞLEMİ
+// ==========================================================================
 function updateUndoButtonUI() {
   const btnUndo = document.getElementById("btn-undo");
   if (gameState.lastAction) {
@@ -472,7 +673,6 @@ function updateUndoButtonUI() {
   }
 }
 
-// GERİ AL (UNDO) İŞLEMİ (SÜREYİ DURDURUR)
 document.getElementById("btn-undo").addEventListener("click", () => {
   if (!gameState.lastAction || gameState.isAnimating) return;
 
@@ -485,7 +685,7 @@ document.getElementById("btn-undo").addEventListener("click", () => {
   } else if (last.type === 'tabu') {
     gameState.turnStats.tabu = Math.max(0, gameState.turnStats.tabu - 1);
   } else if (last.type === 'pass') {
-  gameState.turnPassesLeft++;
+    gameState.turnPassesLeft++;
   }
 
   if (gameState.turnHistory.length > 0) {
@@ -493,8 +693,12 @@ document.getElementById("btn-undo").addEventListener("click", () => {
   }
 
   const previousCard = last.card;
+  unmarkCardAsPlayed(previousCard);
+
+  // Şimdiki kartı desteye geri koy
   if (gameState.currentCard && gameState.currentCard !== previousCard) {
     gameState.availableCards.push(gameState.currentCard);
+    updateDeckUI();
   }
 
   gameState.currentCard = previousCard;
@@ -502,8 +706,10 @@ document.getElementById("btn-undo").addEventListener("click", () => {
 
   gameState.lastAction = null;
 
-  // GERİ AL'A BASILDIĞINDA SÜREYİ DURDUR
+  // Geri Al basıldığında süreyi duraklat (kartı gizlemeden)
   gameState.isPaused = true;
+  gameState.pauseReason = 'undo';
+  clearInterval(gameState.timerInterval);
   document.getElementById("timer-box").classList.add("timer-paused-glow");
 
   updateUndoButtonUI();
@@ -512,23 +718,20 @@ document.getElementById("btn-undo").addEventListener("click", () => {
   triggerCardAnimation("anim-undo");
 });
 
-// YENİ BIR AKSİYON BUTONUNA BASILDIĞINDA SÜREYİ DEVAM ETTİR
-function resumeTimerIfPausedByUndo() {
-  if (gameState.isPaused) {
-    gameState.isPaused = false;
-    document.getElementById("timer-box").classList.remove("timer-paused-glow");
-  }
-}
-
-// BUTON AKSİYONLARI (DOĞRU, TABU, PAS)
+// ==========================================================================
+// 🎮 OYUN BUTONLARI (DOĞRU, TABU, PAS)
+// ==========================================================================
 document.getElementById("btn-correct").addEventListener("click", () => {
-  if (gameState.isAnimating) return;
-  resumeTimerIfPausedByUndo();
+  if (gameState.isAnimating || (gameState.isPaused && gameState.pauseReason === 'manual')) return;
+  resumeIfPausedByUndo();
   soundFX.playCorrect();
 
-  gameState.lastAction = { type: "correct", card: gameState.currentCard };
+  const played = gameState.currentCard;
+  markCardAsPlayed(played);
+
+  gameState.lastAction = { type: "correct", card: played };
   gameState.turnStats.correct++;
-  gameState.turnHistory.push({ card: gameState.currentCard, type: "correct" });
+  gameState.turnHistory.push({ card: played, type: "correct" });
 
   updateUndoButtonUI();
   updateTurnStatsUI();
@@ -539,13 +742,16 @@ document.getElementById("btn-correct").addEventListener("click", () => {
 });
 
 document.getElementById("btn-tabu").addEventListener("click", () => {
-  if (gameState.isAnimating) return;
-  resumeTimerIfPausedByUndo();
+  if (gameState.isAnimating || (gameState.isPaused && gameState.pauseReason === 'manual')) return;
+  resumeIfPausedByUndo();
   soundFX.playTabu();
 
-  gameState.lastAction = { type: "tabu", card: gameState.currentCard };
+  const played = gameState.currentCard;
+  markCardAsPlayed(played);
+
+  gameState.lastAction = { type: "tabu", card: played };
   gameState.turnStats.tabu++;
-  gameState.turnHistory.push({ card: gameState.currentCard, type: "tabu" });
+  gameState.turnHistory.push({ card: played, type: "tabu" });
 
   updateUndoButtonUI();
   updateTurnStatsUI();
@@ -556,13 +762,16 @@ document.getElementById("btn-tabu").addEventListener("click", () => {
 });
 
 document.getElementById("btn-pass").addEventListener("click", () => {
-  if (gameState.isAnimating || gameState.turnPassesLeft <= 0) return;
-  resumeTimerIfPausedByUndo();
+  if (gameState.isAnimating || gameState.turnPassesLeft <= 0 || (gameState.isPaused && gameState.pauseReason === 'manual')) return;
+  resumeIfPausedByUndo();
   soundFX.playPassWhoosh();
 
-  gameState.lastAction = { type: "pass", card: gameState.currentCard };
+  const played = gameState.currentCard;
+  markCardAsPlayed(played);
+
+  gameState.lastAction = { type: "pass", card: played };
   gameState.turnPassesLeft--;
-  gameState.turnHistory.push({ card: gameState.currentCard, type: "pass" });
+  gameState.turnHistory.push({ card: played, type: "pass" });
 
   updateUndoButtonUI();
   updateTurnStatsUI();
@@ -579,19 +788,18 @@ function updateTurnStatsUI() {
 
   const btnPass = document.getElementById("btn-pass");
   document.getElementById("label-pass-btn").textContent = `PAS (${gameState.turnPassesLeft})`;
-  
-  if (gameState.turnPassesLeft <= 0) {
-    btnPass.disabled = true;
-  } else {
-    btnPass.disabled = false;
-  }
+  btnPass.disabled = gameState.turnPassesLeft <= 0;
 }
 
-// TUR BİTİŞİ
+// ==========================================================================
+// 📊 TUR BİTİŞİ VE ÖZET EKRANI
+// ==========================================================================
 function endTurn() {
   clearInterval(gameState.timerInterval);
+  clearAnimationTimeouts();
+  
   pauseOverlay.classList.add("hidden");
-  document.getElementById("timer-box").classList.remove("timer-paused-glow");
+  document.getElementById("timer-box").classList.remove("timer-paused-glow", "timer-warning");
 
   const netScore = (gameState.turnStats.correct * 1) - (gameState.turnStats.tabu * gameState.tabuPenalty);
   gameState.teams[gameState.currentTeamIndex].score += netScore;
@@ -607,25 +815,35 @@ function endTurn() {
   historyContainer.innerHTML = "";
 
   if (gameState.turnHistory.length === 0) {
-    historyContainer.innerHTML = `<p style="color: #64748b; font-style: italic; text-align: center; padding: 16px;">Bu turda kelime oynanmadı.</p>`;
+    const emptyMsg = document.createElement("p");
+    emptyMsg.className = "history-empty-msg";
+    emptyMsg.textContent = "Bu turda kelime oynanmadı.";
+    historyContainer.appendChild(emptyMsg);
   } else {
     gameState.turnHistory.forEach(item => {
       const row = document.createElement("div");
-      row.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: rgba(2,6,23,0.7); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);";
-      
-      let typeBadge = '';
+      row.className = "history-row";
+
+      const wordSpan = document.createElement("span");
+      wordSpan.className = "history-word-text";
+      wordSpan.textContent = item.card.kelime;
+
+      const badge = document.createElement("span");
+      badge.className = "badge-status";
+
       if (item.type === 'correct') {
-        typeBadge = `<span style="background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 11px;">+1 Doğru</span>`;
+        badge.classList.add("badge-correct");
+        badge.textContent = "+1 Doğru";
       } else if (item.type === 'tabu') {
-        typeBadge = `<span style="background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 11px;">-${gameState.tabuPenalty} Tabu</span>`;
+        badge.classList.add("badge-tabu");
+        badge.textContent = `-${gameState.tabuPenalty} Tabu`;
       } else {
-        typeBadge = `<span style="background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 11px;">0 Pas</span>`;
+        badge.classList.add("badge-pass");
+        badge.textContent = "0 Pas";
       }
 
-      row.innerHTML = `
-        <span style="font-weight: 800; color: #ffffff; text-transform: uppercase; font-size: clamp(11px, 3.2vw, 13px);">${item.card.kelime}</span>
-        ${typeBadge}
-      `;
+      row.appendChild(wordSpan);
+      row.appendChild(badge);
       historyContainer.appendChild(row);
     });
   }
@@ -648,6 +866,9 @@ document.getElementById("btn-next-turn").addEventListener("click", () => {
   }
 });
 
+// ==========================================================================
+// 🏆 OYUN BİTTİ VE FİNAL SKOR EKRANI
+// ==========================================================================
 function renderGameOverScreen() {
   const t1 = gameState.teams[0];
   const t2 = gameState.teams[1];
@@ -664,20 +885,40 @@ function renderGameOverScreen() {
   document.getElementById("gameover-winner-text").textContent = winnerText;
 
   const scoresContainer = document.getElementById("gameover-scores");
-  scoresContainer.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(2,6,23,0.8); padding: 12px; border-radius: 12px; border: 1px solid rgba(239,68,68,0.3);">
-      <span style="font-weight: 800; color: #f87171; font-size: clamp(12px, 3.5vw, 14px);">${t1.name}</span>
-      <span style="font-size: clamp(18px, 5.5vw, 22px); font-weight: 900; color: #ffffff;">${t1.score} Puan</span>
-    </div>
-    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(2,6,23,0.8); padding: 12px; border-radius: 12px; border: 1px solid rgba(59,130,246,0.3);">
-      <span style="font-weight: 800; color: #60a5fa; font-size: clamp(12px, 3.5vw, 14px);">${t2.name}</span>
-      <span style="font-size: clamp(18px, 5.5vw, 22px); font-weight: 900; color: #ffffff;">${t2.score} Puan</span>
-    </div>
-  `;
+  scoresContainer.innerHTML = "";
+
+  // 1. Takım Satırı
+  const row1 = document.createElement("div");
+  row1.className = "gameover-score-row gameover-score-row-red";
+  const name1 = document.createElement("span");
+  name1.className = "gameover-team-name-red";
+  name1.textContent = t1.name;
+  const score1 = document.createElement("span");
+  score1.className = "gameover-score-text";
+  score1.textContent = `${t1.score} Puan`;
+  row1.appendChild(name1);
+  row1.appendChild(score1);
+
+  // 2. Takım Satırı
+  const row2 = document.createElement("div");
+  row2.className = "gameover-score-row gameover-score-row-blue";
+  const name2 = document.createElement("span");
+  name2.className = "gameover-team-name-blue";
+  name2.textContent = t2.name;
+  const score2 = document.createElement("span");
+  score2.className = "gameover-score-text";
+  score2.textContent = `${t2.score} Puan`;
+  row2.appendChild(name2);
+  row2.appendChild(score2);
+
+  scoresContainer.appendChild(row1);
+  scoresContainer.appendChild(row2);
 
   showScreen("gameover");
 }
 
 document.getElementById("btn-restart").addEventListener("click", () => {
+  resetActiveTurnState();
+  updateDeckUI();
   showScreen("setup");
 });
