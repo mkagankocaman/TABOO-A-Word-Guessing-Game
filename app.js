@@ -110,6 +110,10 @@ class SoundFX {
       }, idx * 50);
     });
   }
+
+  playReviewToggle() {
+    this.playTone(880, 'sine', 0.05, 0.09);
+  }
 }
 
 const soundFX = new SoundFX();
@@ -146,6 +150,7 @@ const gameState = {
   lastAction: null,
   timeLeft: 60,
   turnEndTime: 0,
+  turnInitialTeamScore: 0,
   timerInterval: null,
   
   // Duraklatma Durumu: 'none' | 'manual' | 'undo'
@@ -792,7 +797,8 @@ function updateTurnStatsUI() {
 }
 
 // ==========================================================================
-// 📊 TUR BİTİŞİ VE ÖZET EKRANI
+// ==========================================================================
+// 📊 TUR BİTİŞİ VE İNTERAKTİF ÖZET EKRANI (ROUND REVIEW UI)
 // ==========================================================================
 function endTurn() {
   clearInterval(gameState.timerInterval);
@@ -801,16 +807,37 @@ function endTurn() {
   pauseOverlay.classList.add("hidden");
   document.getElementById("timer-box").classList.remove("timer-paused-glow", "timer-warning");
 
-  const netScore = (gameState.turnStats.correct * 1) - (gameState.turnStats.tabu * gameState.tabuPenalty);
-  gameState.teams[gameState.currentTeamIndex].score += netScore;
+  // O anki taban puanı sakla
+  gameState.turnInitialTeamScore = gameState.teams[gameState.currentTeamIndex].score;
 
   const activeTeam = gameState.teams[gameState.currentTeamIndex];
   document.getElementById("summary-team-title").textContent = `${activeTeam.name} Sonuçları`;
   
+  renderSummaryHistoryList();
+  recalculateSummaryScore(false);
+
+  showScreen("summary");
+}
+
+function recalculateSummaryScore(animate = true) {
+  const correctCount = gameState.turnHistory.filter(i => i.type === 'correct').length;
+  const tabuCount = gameState.turnHistory.filter(i => i.type === 'tabu').length;
+  
+  const netScore = (correctCount * 1) - (tabuCount * gameState.tabuPenalty);
+  gameState.teams[gameState.currentTeamIndex].score = gameState.turnInitialTeamScore + netScore;
+
   const netScoreEl = document.getElementById("summary-net-score");
   netScoreEl.textContent = (netScore >= 0 ? `+${netScore}` : `${netScore}`);
   netScoreEl.style.color = netScore >= 0 ? '#34d399' : '#f87171';
 
+  if (animate) {
+    netScoreEl.classList.remove("animate-pop");
+    void netScoreEl.offsetWidth;
+    netScoreEl.classList.add("animate-pop");
+  }
+}
+
+function renderSummaryHistoryList() {
   const historyContainer = document.getElementById("summary-history-list");
   historyContainer.innerHTML = "";
 
@@ -819,36 +846,119 @@ function endTurn() {
     emptyMsg.className = "history-empty-msg";
     emptyMsg.textContent = "Bu turda kelime oynanmadı.";
     historyContainer.appendChild(emptyMsg);
-  } else {
-    gameState.turnHistory.forEach(item => {
-      const row = document.createElement("div");
-      row.className = "history-row";
-
-      const wordSpan = document.createElement("span");
-      wordSpan.className = "history-word-text";
-      wordSpan.textContent = item.card.kelime;
-
-      const badge = document.createElement("span");
-      badge.className = "badge-status";
-
-      if (item.type === 'correct') {
-        badge.classList.add("badge-correct");
-        badge.textContent = "+1 Doğru";
-      } else if (item.type === 'tabu') {
-        badge.classList.add("badge-tabu");
-        badge.textContent = `-${gameState.tabuPenalty} Tabu`;
-      } else {
-        badge.classList.add("badge-pass");
-        badge.textContent = "0 Pas";
-      }
-
-      row.appendChild(wordSpan);
-      row.appendChild(badge);
-      historyContainer.appendChild(row);
-    });
+    return;
   }
 
-  showScreen("summary");
+  gameState.turnHistory.forEach((item) => {
+    const cardContainer = document.createElement("div");
+    cardContainer.className = "history-item-card";
+
+    // Ana Satır
+    const row = document.createElement("div");
+    row.className = "history-row";
+
+    // Kelime & Akordeon Başlığı (Chevron ile)
+    const toggleArea = document.createElement("div");
+    toggleArea.className = "history-word-toggle";
+    toggleArea.title = "Yasaklı kelimeleri görmek için tıklayın";
+
+    toggleArea.innerHTML = `
+      <svg class="history-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+      <span class="history-word-text truncate">${item.card.kelime}</span>
+    `;
+
+    toggleArea.addEventListener("click", () => {
+      cardContainer.classList.toggle("expanded");
+    });
+
+    // 3'lü Review Buton Grubu
+    const btnGroup = document.createElement("div");
+    btnGroup.className = "review-btn-group";
+
+    const btnCorrect = document.createElement("button");
+    btnCorrect.className = `review-btn review-btn-correct ${item.type === 'correct' ? 'active-correct' : ''}`;
+    btnCorrect.textContent = "+1 Doğru";
+
+    const btnTabu = document.createElement("button");
+    btnTabu.className = `review-btn review-btn-tabu ${item.type === 'tabu' ? 'active-tabu' : ''}`;
+    btnTabu.textContent = `-${gameState.tabuPenalty} Tabu`;
+
+    const btnPass = document.createElement("button");
+    btnPass.className = `review-btn review-btn-pass ${item.type === 'pass' ? 'active-pass' : ''}`;
+    btnPass.textContent = "0 Pas";
+
+    const updateButtonVisuals = (newType) => {
+      btnCorrect.classList.toggle("active-correct", newType === 'correct');
+      btnTabu.classList.toggle("active-tabu", newType === 'tabu');
+      btnPass.classList.toggle("active-pass", newType === 'pass');
+    };
+
+    btnCorrect.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (item.type !== 'correct') {
+        item.type = 'correct';
+        soundFX.playReviewToggle();
+        updateButtonVisuals('correct');
+        recalculateSummaryScore(true);
+      }
+    });
+
+    btnTabu.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (item.type !== 'tabu') {
+        item.type = 'tabu';
+        soundFX.playReviewToggle();
+        updateButtonVisuals('tabu');
+        recalculateSummaryScore(true);
+      }
+    });
+
+    btnPass.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (item.type !== 'pass') {
+        item.type = 'pass';
+        soundFX.playReviewToggle();
+        updateButtonVisuals('pass');
+        recalculateSummaryScore(true);
+      }
+    });
+
+    btnGroup.appendChild(btnCorrect);
+    btnGroup.appendChild(btnTabu);
+    btnGroup.appendChild(btnPass);
+
+    row.appendChild(toggleArea);
+    row.appendChild(btnGroup);
+    cardContainer.appendChild(row);
+
+    // Akordeon Detayı: 5 Yasaklı Kelime
+    const accordion = document.createElement("div");
+    accordion.className = "history-accordion";
+
+    const label = document.createElement("div");
+    label.className = "accordion-label";
+    label.textContent = "YASAKLI KELİMELER";
+
+    const tagsGrid = document.createElement("div");
+    tagsGrid.className = "accordion-tags-grid";
+
+    if (item.card.yasakli_kelimeler && Array.isArray(item.card.yasakli_kelimeler)) {
+      item.card.yasakli_kelimeler.forEach(w => {
+        const tag = document.createElement("span");
+        tag.className = "accordion-tag";
+        tag.textContent = w;
+        tagsGrid.appendChild(tag);
+      });
+    }
+
+    accordion.appendChild(label);
+    accordion.appendChild(tagsGrid);
+    cardContainer.appendChild(accordion);
+
+    historyContainer.appendChild(cardContainer);
+  });
 }
 
 document.getElementById("btn-next-turn").addEventListener("click", () => {

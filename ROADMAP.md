@@ -4,12 +4,13 @@ Bu belge, Taboo kelime tahmin oyunu için gelecekte hayata geçirilmesi planlana
 
 ---
 
-## 🎯 Aşama 1: İnteraktif Tur Özeti (Round Review UI)
+## ✅ Aşama 1: İnteraktif Tur Özeti (Round Review UI) [Tamamlandı]
 * **Amaç:** Tur bittikten sonra hakem/oyuncu hatalarını veya itirazları düzeltmek için özet ekranını interaktif hale getirmek.
-* **Detaylar:**
-  * Tur özeti ekranındaki (`screen-summary`) her bir kelimeye tıklanabilir Doğru / Tabu / Pas seçim butonları veya geçiş anahtarı ekleme.
-  * Kart durumu değiştirildiğinde o turun net puanının ve takım genel puanının otomatik ve anlık güncellenmesi.
-  * "Sonraki Tura Geç" butonuna basıldığında düzeltilmiş son skorun kesinleşmesi.
+* **Tamamlanan Özellikler:**
+  * Her kelime satırına `[+1 Doğru]`, `[-Tabu]`, `[0 Pas]` 3'lü buton grubu entegre edildi.
+  * Kart durumuna tıklandığında anlık klik sesi, net puan pop animasyonu ve canlı puan yeniden hesaplaması sağlandı.
+  * Kelimeye tıklandığında açılan akordeon ile kartın 5 yasaklı kelimesini doğrudan görüntüleme desteği eklendi.
+  * "Sonraki Tura Geç" ile düzeltilmiş skorun kesinleşmesi sağlandı.
 
 ---
 
