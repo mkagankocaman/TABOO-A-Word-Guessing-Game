@@ -1,2 +1,0 @@
-- Gerektiğinde subagent kullanmaktan çekinme. Bu sayede halüsinasyonu azaltabiliriz.
-- Yaptığın her önemli kod değişikliklerinde bir commit mesajı da öner.
