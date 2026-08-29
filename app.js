@@ -3,12 +3,14 @@
  */
 
 // ==========================================================================
-// 🔊 ÇEVRİMDIŞI WEB AUDIO API SES SENTEZLEYİCİ
+// 🔊 GELİŞMİŞ WEB AUDIO API SES SENTEZLEYİCİ (ARCADE PALETTE)
 // ==========================================================================
 class SoundFX {
   constructor() {
     this.ctx = null;
     this.isUnlocked = false;
+    this.isEnabled = true;
+    this.masterGain = null;
   }
 
   init() {
@@ -17,6 +19,9 @@ class SoundFX {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (AudioContextClass) {
           this.ctx = new AudioContextClass();
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.setValueAtTime(this.isEnabled ? 1.0 : 0.0, this.ctx.currentTime);
+          this.masterGain.connect(this.ctx.destination);
         }
       }
       if (this.ctx && this.ctx.state === 'suspended') {
@@ -28,112 +33,341 @@ class SoundFX {
     }
   }
 
-  playTone(freq, type = 'sine', duration = 0.1, gainVal = 0.1) {
-    if (!this.ctx) return;
-    try {
-      if (this.ctx.state === 'suspended') this.ctx.resume();
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-      gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + duration);
-    } catch (e) {}
-  }
-
-  // 10 - 4 saniye arası standart uyarı tıkı
-  playCountdownTick() {
-    this.playTone(650, 'sine', 0.08, 0.14);
-  }
-
-  // Son 3 saniye acil durum hızlandırılmış yüksek tonlu nabız
-  playUrgentTick() {
-    if (!this.ctx) return;
-    this.playTone(920, 'sine', 0.06, 0.18);
-    setTimeout(() => {
-      this.playTone(1100, 'sine', 0.07, 0.2);
-    }, 45);
-  }
-
-  // Süre bittiğinde çalan kapanış zili/düdüğü
-  playTimeUpChime() {
-    if (!this.ctx) return;
-    const notes = [440.00, 330.00, 220.00];
-    notes.forEach((freq, idx) => {
-      setTimeout(() => {
-        this.playTone(freq, 'sawtooth', 0.22, 0.18);
-      }, idx * 70);
-    });
-  }
-
-  playStartChime() {
-    if (!this.ctx) return;
-    const notes = [523.25, 659.25, 783.99, 1046.50];
-    notes.forEach((freq, idx) => {
-      setTimeout(() => {
-        this.playTone(freq, 'triangle', 0.22, 0.15);
-      }, idx * 60);
-    });
-  }
-
-  playCorrect() {
-    if (!this.ctx) return;
-    this.playTone(523.25, 'sine', 0.09, 0.15);
-    setTimeout(() => this.playTone(659.25, 'sine', 0.16, 0.15), 70);
-  }
-
-  playTabu() {
-    if (!this.ctx) return;
-    this.playTone(140, 'sawtooth', 0.22, 0.2);
-  }
-
-  playPassWhoosh() {
-    if (!this.ctx) return;
-    try {
-      if (this.ctx.state === 'suspended') this.ctx.resume();
-      const bufferSize = this.ctx.sampleRate * 0.15;
-      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-      const noise = this.ctx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(300, this.ctx.currentTime);
-      filter.frequency.exponentialRampToValueAtTime(1400, this.ctx.currentTime + 0.13);
-      filter.Q.value = 3;
-
-      const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(this.ctx.destination);
-      noise.start();
-    } catch (e) {
-      this.playTone(400, 'sine', 0.12, 0.1);
+  setEnabled(enabled) {
+    this.isEnabled = !!enabled;
+    if (this.ctx && this.masterGain) {
+      try {
+        this.masterGain.gain.setValueAtTime(this.isEnabled ? 1.0 : 0.0, this.ctx.currentTime);
+      } catch (e) {}
     }
   }
 
-  playUndo() {
-    if (!this.ctx) return;
-    const notes = [659.25, 523.25, 392.00];
-    notes.forEach((freq, idx) => {
-      setTimeout(() => {
-        this.playTone(freq, 'sine', 0.1, 0.15);
-      }, idx * 50);
+  // 1. DOĞRU (CORRECT): 4 Notalı Parlak Majör Şan/Zil Arpeji (C5 - E5 - G5 - C6)
+  playCorrect() {
+    if (!this.isEnabled || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const t = this.ctx.currentTime;
+    const notes = [
+      { freq: 523.25, time: 0.00, dur: 0.28 }, // C5
+      { freq: 659.25, time: 0.04, dur: 0.32 }, // E5
+      { freq: 783.99, time: 0.08, dur: 0.36 }, // G5
+      { freq: 1046.50, time: 0.12, dur: 0.45 } // C6 (Shimmer)
+    ];
+
+    notes.forEach(n => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(n.freq, t + n.time);
+
+      gain.gain.setValueAtTime(0.001, t + n.time);
+      gain.gain.exponentialRampToValueAtTime(0.18, t + n.time + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + n.time + n.dur);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(t + n.time);
+      osc.stop(t + n.time + n.dur);
     });
   }
 
+  // 2. TABU: Game-Show Hata Buzzer'ı (Dual Detuned Sawtooth + Resonant LPF)
+  playTabu() {
+    if (!this.isEnabled || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const t = this.ctx.currentTime;
+    const duration = 0.26;
+
+    // Çift osilatör (Detuned: 130.81Hz & 137.5Hz -> Dolgun yarışma programı bas tonu)
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc1.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(130.81, t); // C3
+
+    osc2.type = 'sawtooth';
+    osc2.frequency.setValueAtTime(137.50, t); // Detuned C#3
+
+    // Low-Pass Filter: Yüksek kulak tırmalayıcı frekansları kırp, 680Hz rezonans bas
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(680, t);
+    filter.frequency.exponentialRampToValueAtTime(320, t + duration);
+    filter.Q.value = 4.0;
+
+    gain.gain.setValueAtTime(0.001, t);
+    gain.gain.linearRampToValueAtTime(0.25, t + 0.015);
+    gain.gain.setValueAtTime(0.25, t + 0.18);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc1.start(t);
+    osc2.start(t);
+    osc1.stop(t + duration);
+    osc2.stop(t + duration);
+  }
+
+  // 3. PAS (PASS): Aerodinamik Hava Hışırtısı (Filtered White Noise + Exponential Sweep)
+  playPassWhoosh() {
+    if (!this.isEnabled || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const t = this.ctx.currentTime;
+    const duration = 0.16;
+    const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    // Dinamik Bandpass Süpürme: 450Hz -> 2400Hz -> 350Hz
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.Q.value = 2.8;
+    filter.frequency.setValueAtTime(450, t);
+    filter.frequency.exponentialRampToValueAtTime(2400, t + 0.07);
+    filter.frequency.exponentialRampToValueAtTime(350, t + duration);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.001, t);
+    gain.gain.linearRampToValueAtTime(0.24, t + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    noise.start(t);
+    noise.stop(t + duration);
+  }
+
+  // 4. GERİ AL (UNDO): Retro Kaset Geri Sarma / İki Tonlu Alçalan Cıvıltı (Chirp)
+  playUndo() {
+    if (!this.isEnabled || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const t = this.ctx.currentTime;
+    
+    // 1. Hızlı Alçalan Cıvıltı (784Hz -> 392Hz)
+    const osc1 = this.ctx.createOscillator();
+    const gain1 = this.ctx.createGain();
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(784.00, t);
+    osc1.frequency.exponentialRampToValueAtTime(392.00, t + 0.06);
+
+    gain1.gain.setValueAtTime(0.18, t);
+    gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    osc1.connect(gain1);
+    gain1.connect(this.masterGain);
+    osc1.start(t);
+    osc1.stop(t + 0.06);
+
+    // 2. İkinci Alçalan Cıvıltı (523Hz -> 220Hz)
+    const osc2 = this.ctx.createOscillator();
+    const gain2 = this.ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(523.25, t + 0.06);
+    osc2.frequency.exponentialRampToValueAtTime(220.00, t + 0.13);
+
+    gain2.gain.setValueAtTime(0.18, t + 0.06);
+    gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+    osc2.connect(gain2);
+    gain2.connect(this.masterGain);
+    osc2.start(t + 0.06);
+    osc2.stop(t + 0.13);
+  }
+
+  // 5. 10s-4s GERİ SAYIM: Yormayan Ahşap Blok / Woodblock Tıkı
+  playCountdownTick() {
+    if (!this.isEnabled || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const t = this.ctx.currentTime;
+    const duration = 0.035;
+
+    // Hızlı frekans düşüşü (820Hz -> 240Hz) ile organik tok tık
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(820, t);
+    osc.frequency.exponentialRampToValueAtTime(240, t + duration);
+
+    gain.gain.setValueAtTime(0.16, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(t);
+    osc.stop(t + duration);
+  }
+
+  // 6. SON 3 SANİYE (3,2,1): Acil Durum Arcade Gerilim Nabzı (Urgent Dual Ping)
+  playUrgentTick() {
+    if (!this.isEnabled || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const t = this.ctx.currentTime;
+
+    // Ping 1 (B5 - 987.77 Hz)
+    const osc1 = this.ctx.createOscillator();
+    const gain1 = this.ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(987.77, t);
+    gain1.gain.setValueAtTime(0.18, t);
+    gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    osc1.connect(gain1);
+    gain1.connect(this.masterGain);
+    osc1.start(t);
+    osc1.stop(t + 0.04);
+
+    // Ping 2 (E6 - 1318.51 Hz - Yüksek Vurgu)
+    const osc2 = this.ctx.createOscillator();
+    const gain2 = this.ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(1318.51, t + 0.035);
+    gain2.gain.setValueAtTime(0.22, t + 0.035);
+    gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.085);
+    osc2.connect(gain2);
+    gain2.connect(this.masterGain);
+    osc2.start(t + 0.035);
+    osc2.stop(t + 0.085);
+  }
+
+  // 7. SÜRE BİTİŞİ (TIME UP): Üçlü Alarm / Hakem Düdüğü (Triple Staccato Alarm)
+  playTimeUpChime() {
+    if (!this.isEnabled || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const t = this.ctx.currentTime;
+    const bursts = [
+      { tOffset: 0.00, dur: 0.09, f1: 330, f2: 440 },
+      { tOffset: 0.12, dur: 0.09, f1: 330, f2: 440 },
+      { tOffset: 0.24, dur: 0.24, f1: 220, f2: 330 }
+    ];
+
+    bursts.forEach(b => {
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const filter = this.ctx.createBiquadFilter();
+      const gain = this.ctx.createGain();
+
+      osc1.type = 'sawtooth';
+      osc2.type = 'square';
+      osc1.frequency.setValueAtTime(b.f1, t + b.tOffset);
+      osc2.frequency.setValueAtTime(b.f2, t + b.tOffset);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(900, t + b.tOffset);
+
+      gain.gain.setValueAtTime(0.001, t + b.tOffset);
+      gain.gain.linearRampToValueAtTime(0.20, t + b.tOffset + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + b.tOffset + b.dur);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc1.start(t + b.tOffset);
+      osc2.start(t + b.tOffset);
+      osc1.stop(t + b.tOffset + b.dur);
+      osc2.stop(t + b.tOffset + b.dur);
+    });
+  }
+
+  // 8. 3-2-1 GERİ SAYIM PİTCH YÜKSELİŞİ (Tick 1 -> Tick 2 -> Tick 3)
+  playCountdownStep(stepNumber) {
+    if (!this.isEnabled || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const t = this.ctx.currentTime;
+    // 3: 440Hz (A4), 2: 587.33Hz (D5), 1: 880Hz (A5)
+    const pitchMap = { 3: 440.00, 2: 587.33, 1: 880.00 };
+    const freq = pitchMap[stepNumber] || 650;
+    const duration = 0.07;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, t);
+
+    gain.gain.setValueAtTime(0.001, t);
+    gain.gain.linearRampToValueAtTime(0.22, t + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(t);
+    osc.stop(t + duration);
+  }
+
+  // BAŞLA / GO! Yüksek Şenlik Arpeji
+  playStartChime() {
+    if (!this.isEnabled || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const t = this.ctx.currentTime;
+    const arpeggio = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+
+    arpeggio.forEach((freq, idx) => {
+      const startTime = t + (idx * 0.045);
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.linearRampToValueAtTime(0.18, startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.32);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.32);
+    });
+  }
+
+  // 9. REVIEW TOGGLE: Mikro-Switch Mekanik Tıklama
   playReviewToggle() {
-    this.playTone(880, 'sine', 0.05, 0.09);
+    if (!this.isEnabled || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(2200, t);
+    osc.frequency.exponentialRampToValueAtTime(600, t + 0.015);
+
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(t);
+    osc.stop(t + 0.015);
   }
 }
 
@@ -143,7 +377,15 @@ const soundFX = new SoundFX();
 // 📳 HİBRİT HAPTİC TİTREŞİM MOTORU (WEB VIBRATE + CAPACITOR HAPTICS)
 // ==========================================================================
 const HapticManager = {
+  isEnabled: true,
+
+  setEnabled(enabled) {
+    this.isEnabled = !!enabled;
+  },
+
   async trigger(patternType) {
+    if (!this.isEnabled) return;
+
     // 1. Capacitor Native Haptics
     const Haptics = window.Capacitor?.Plugins?.Haptics;
     if (Haptics) {
@@ -240,7 +482,9 @@ function t(key, ...args) {
 // ==========================================================================
 const STORAGE_KEYS = {
   SETTINGS: 'taboo_game_settings',
-  PLAYED_CARDS_PREFIX: 'taboo_played_card_ids_'
+  PLAYED_CARDS_PREFIX: 'taboo_played_card_ids_',
+  SOUND_ENABLED: 'taboo_sound_enabled',
+  HAPTICS_ENABLED: 'taboo_haptics_enabled'
 };
 
 const gameState = {
@@ -273,6 +517,7 @@ const gameState = {
   turnEndTime: 0,
   turnInitialTeamScore: 0,
   timerInterval: null,
+  countdownInterval: null,
   
   // Duraklatma Durumu: 'none' | 'manual' | 'undo'
   pauseReason: 'none',
@@ -283,6 +528,74 @@ const gameState = {
   animationTimeout1: null,
   animationTimeout2: null,
   timerPathLength: 236
+};
+
+// ==========================================================================
+// 🎛️ MERKEZİ TERCİH YÖNETİCİSİ (SES & TİTREŞİM SENKRONİZASYONU)
+// ==========================================================================
+const PreferencesManager = {
+  soundEnabled: true,
+  hapticsEnabled: true,
+  _initialized: false,
+
+  init() {
+    if (this._initialized) return;
+    this._initialized = true;
+
+    const savedSound = localStorage.getItem(STORAGE_KEYS.SOUND_ENABLED);
+    const savedHaptics = localStorage.getItem(STORAGE_KEYS.HAPTICS_ENABLED);
+
+    this.soundEnabled = savedSound !== null ? savedSound === 'true' : true;
+    this.hapticsEnabled = savedHaptics !== null ? savedHaptics === 'true' : true;
+
+    soundFX.setEnabled(this.soundEnabled);
+    HapticManager.setEnabled(this.hapticsEnabled);
+
+    this.syncUI();
+    this.bindEvents();
+  },
+
+  setSound(enabled, triggerSave = true) {
+    this.soundEnabled = !!enabled;
+    soundFX.setEnabled(this.soundEnabled);
+    if (triggerSave) {
+      localStorage.setItem(STORAGE_KEYS.SOUND_ENABLED, this.soundEnabled);
+    }
+    this.syncUI();
+  },
+
+  setHaptics(enabled, triggerSave = true) {
+    this.hapticsEnabled = !!enabled;
+    HapticManager.setEnabled(this.hapticsEnabled);
+    if (triggerSave) {
+      localStorage.setItem(STORAGE_KEYS.HAPTICS_ENABLED, this.hapticsEnabled);
+    }
+    this.syncUI();
+  },
+
+  syncUI() {
+    const soundToggles = document.querySelectorAll('.toggle-sound-input');
+    const hapticToggles = document.querySelectorAll('.toggle-haptics-input');
+
+    soundToggles.forEach(el => el.checked = this.soundEnabled);
+    hapticToggles.forEach(el => el.checked = this.hapticsEnabled);
+  },
+
+  bindEvents() {
+    document.querySelectorAll('.toggle-sound-input').forEach(el => {
+      el.addEventListener('change', (e) => {
+        this.setSound(e.target.checked);
+        if (e.target.checked) soundFX.playReviewToggle();
+      });
+    });
+
+    document.querySelectorAll('.toggle-haptics-input').forEach(el => {
+      el.addEventListener('change', (e) => {
+        this.setHaptics(e.target.checked);
+        if (e.target.checked) HapticManager.trigger('pass');
+      });
+    });
+  }
 };
 
 // DOM EKRANLARI
@@ -314,6 +627,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener('touchmove', (e) => {
     if (e.touches.length > 1) e.preventDefault();
   }, { passive: false });
+
+  // Tercihleri ve Ses/Titreşim Yöneticisini Başlat
+  PreferencesManager.init();
 
   // Service Worker Kaydı (PWA Çevrimdışı Desteği)
   if ('serviceWorker' in navigator) {
@@ -406,11 +722,10 @@ function initPWAInstallBanner() {
 // 🔙 DONANIMSAL GERİ TUŞU & GEÇMİŞ (NAVIGATION & POPSTATE)
 // ==========================================================================
 function initNavigationManager() {
-  // Sayfa geçmişine ilk state'i yaz
   window.history.replaceState({ screen: 'setup' }, '');
 
   window.addEventListener('popstate', (event) => {
-    handleAppBackNavigation(event);
+    handleAppBackNavigation();
   });
 
   // Capacitor Android Geri Tuşu Eklentisi
@@ -581,6 +896,17 @@ function applyLanguageUI() {
   document.getElementById("lbl-remaining-cards").textContent = t('remainingCards') + ":";
   document.getElementById("btn-reset-deck").textContent = t('resetDeckBtn');
   document.getElementById("btn-start-game-text").textContent = t('startGameBtn');
+
+  // Ses ve Titreşim Etiketleri
+  const lblSound = document.getElementById("lbl-sound-toggle");
+  const lblHaptics = document.getElementById("lbl-haptics-toggle");
+  const lblPauseSound = document.getElementById("lbl-pause-sound");
+  const lblPauseHaptics = document.getElementById("lbl-pause-haptics");
+
+  if (lblSound) lblSound.textContent = t('soundEffectsLabel');
+  if (lblHaptics) lblHaptics.textContent = t('hapticsLabel');
+  if (lblPauseSound) lblPauseSound.textContent = t('soundLabelShort');
+  if (lblPauseHaptics) lblPauseHaptics.textContent = t('hapticsLabelShort');
 
   // PWA Install Banner
   const pwaTitle = document.getElementById("pwa-install-title");
@@ -805,15 +1131,25 @@ function prepareReadyScreen() {
   document.getElementById("ready-score-team2-label").textContent = gameState.teams[1].name;
   document.getElementById("ready-score-team2").textContent = gameState.teams[1].score;
 
+  const btnStartTurn = document.getElementById("btn-start-turn");
+  if (btnStartTurn) btnStartTurn.disabled = false;
+
   showScreen("ready");
 }
 
 function runCountdown(callback) {
+  if (gameState.countdownInterval) {
+    clearInterval(gameState.countdownInterval);
+    gameState.countdownInterval = null;
+  }
+
   soundFX.init();
 
   const overlay = document.getElementById("countdown-overlay");
   const numberEl = document.getElementById("countdown-number");
   const teamTitle = document.getElementById("countdown-team-title");
+  const btnStartTurn = document.getElementById("btn-start-turn");
+  if (btnStartTurn) btnStartTurn.disabled = true;
 
   const activeTeam = gameState.teams[gameState.currentTeamIndex];
   teamTitle.textContent = t('getReadyTitle', activeTeam.name);
@@ -837,7 +1173,7 @@ function runCountdown(callback) {
       numberEl.style.fontSize = "clamp(80px, 22vw, 110px)";
       numberEl.style.color = "#f59e0b";
       numberEl.style.textShadow = "0 10px 30px rgba(251,191,36,0.4)";
-      soundFX.playCountdownTick();
+      soundFX.playCountdownStep(count);
       HapticManager.trigger('warning');
     }
     numberEl.classList.add("animate-pop");
@@ -845,15 +1181,17 @@ function runCountdown(callback) {
 
   updateDisplay(count);
 
-  const interval = setInterval(() => {
+  gameState.countdownInterval = setInterval(() => {
     count--;
     if (count > 0) {
       updateDisplay(count);
     } else if (count === 0) {
       updateDisplay(t('countdownStart'), true);
     } else {
-      clearInterval(interval);
+      clearInterval(gameState.countdownInterval);
+      gameState.countdownInterval = null;
       overlay.classList.add("hidden");
+      if (btnStartTurn) btnStartTurn.disabled = false;
       callback();
     }
   }, 850);
@@ -883,7 +1221,17 @@ function clearAnimationTimeouts() {
 
 function resetActiveTurnState() {
   clearInterval(gameState.timerInterval);
+  if (gameState.countdownInterval) {
+    clearInterval(gameState.countdownInterval);
+    gameState.countdownInterval = null;
+  }
   clearAnimationTimeouts();
+
+  const countdownOverlay = document.getElementById("countdown-overlay");
+  if (countdownOverlay) countdownOverlay.classList.add("hidden");
+
+  const btnStartTurn = document.getElementById("btn-start-turn");
+  if (btnStartTurn) btnStartTurn.disabled = false;
 
   gameState.isPaused = false;
   gameState.pauseReason = 'none';
@@ -970,11 +1318,11 @@ function startTimer() {
         if (gameState.lastTickedSecond !== remaining) {
           gameState.lastTickedSecond = remaining;
 
-          // 1) 10 - 4 saniye arası standart tık sesi
+          // 1) 10 - 4 saniye arası standart tok ahşap tık sesi
           if (remaining <= 10 && remaining > 3) {
             soundFX.playCountdownTick();
           }
-          // 2) Son 3 saniye (3, 2, 1): Hızlandırılmış/yüksek ses + Senkronize Titreşim
+          // 2) Son 3 saniye (3, 2, 1): Acil arcade nabız sesi + Senkronize Titreşim
           else if (remaining <= 3 && remaining > 0) {
             soundFX.playUrgentTick();
             HapticManager.trigger('warning');
@@ -1007,6 +1355,7 @@ function pauseGameManually() {
   HapticManager.trigger('pass');
   pauseOverlay.classList.remove("hidden");
   document.getElementById("timer-box").classList.add("timer-paused-glow");
+  PreferencesManager.syncUI();
 }
 
 function resumeGame() {
@@ -1111,7 +1460,7 @@ function updateUndoButtonUI() {
 }
 
 document.getElementById("btn-undo").addEventListener("click", () => {
-  if (!gameState.lastAction || gameState.isAnimating) return;
+  if (!gameState.lastAction || gameState.isAnimating || (gameState.isPaused && gameState.pauseReason === 'manual')) return;
 
   soundFX.playUndo();
   HapticManager.trigger('undo');
@@ -1307,6 +1656,7 @@ function renderSummaryHistoryList() {
 
     toggleArea.addEventListener("click", () => {
       cardContainer.classList.toggle("expanded");
+      soundFX.playReviewToggle();
       HapticManager.trigger('pass');
     });
 
@@ -1402,6 +1752,7 @@ function renderSummaryHistoryList() {
 }
 
 document.getElementById("btn-next-turn").addEventListener("click", () => {
+  soundFX.playReviewToggle();
   HapticManager.trigger('pass');
   if (gameState.currentTeamIndex === 0) {
     gameState.currentTeamIndex = 1;
@@ -1472,6 +1823,7 @@ function renderGameOverScreen() {
 document.getElementById("btn-restart").addEventListener("click", () => {
   resetActiveTurnState();
   releaseWakeLock();
+  soundFX.playReviewToggle();
   HapticManager.trigger('pass');
   updateDeckUI();
   showScreen("setup");

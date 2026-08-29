@@ -33,8 +33,9 @@ Bu belge, Taboo kelime tahmin oyunu için gelecekte hayata geçirilmesi planlana
   * **Dinamik Kart Precache & Cache-First Service Worker (`sw.js`):** Dinamik yüklenen `cards_tr.js` ve `cards_en.js` dahil tüm varlıkların önbelleğe alınmasıyla sıfır internette %100 çevrimdışı çalışma.
   * **Akıllı Ekran Açık Tutma (Screen Wake Lock):** Yalnızca aktif tur esnasında ekran kilidinin açık tutulması; sekme arka plana geçtiğinde sürenin boşa akmaması için otomatik duraklatma ve geri dönüldüğünde kilidin güvenle yenilenmesi.
   * **Donanımsal Geri Tuşu & Popstate Yönetimi:** Aktif tur esnasında geri tuşuna basıldığında sayfanın terk edilmesini önleyip oyunu anında "Pause" moduna alma ve güvenli onay akışı.
-  * **⏰ Son 10s & Son 3s Ses ve Titreşim Koreografisi:** 10-4 saniye arası standart uyarı tıkı; son 3 saniyede (3, 2, 1) hızlandırılmış yüksek tonlu nabız sesi + hissedilir senkronize titreşim darbeleri; süre bitiminde bitiş düdüğü ve kapanış titreşimi.
-  * **Hibrit Haptic Titreşim Motoru (`HapticManager`):** Buton tıklamalarında (Doğru, Tabu, Pas, Geri Al) eyleme özel ayırt edici titreşimler (Web'de `navigator.vibrate`, Android'de `@capacitor/haptics`).
+  * **🎼 Zengin Arcade Ses Paleti & DSP Filtreleme:** C5-C6 majör arpej şan/zil (Doğru), çift osilatörlü LPF filtreli dolgun hata buzzer'ı (Tabu), aerodinamik süpürmeli hava hışırtısı (Pas), kaset geri sarma cıvıltısı (Geri Al), ahşap blok tıkı (10s-4s), gerilim çift ping nabzı (3-2-1), üçlü hakem alarmı (Bitiş) ve yükselen tonlu 3-2-1 geri sayımı.
+  * **🎛️ Çift Yönlü Senkronize Ses ve Titreşim Anahtarları:** Hem Başlangıç ekranından hem de oyun içi Duraklatma (Pause) menüsünden ses ve titreşimi anında açıp/kapatabilme, `localStorage` kalıcılığı.
+  * **Hibrit Haptic Titreşim Motoru (`HapticManager`):** Buton tıklamalarında (Doğru, Tabu, Pas, Geri Al, Uyarı) eyleme özel ayırt edici titreşimler (Web'de `navigator.vibrate`, Android'de `@capacitor/haptics`).
   * **Uygulama İçi PWA Yükleme Banner'ı:** `beforeinstallprompt` ile başlangıç ekranında şık "Ana Ekrana Ekle" arayüzü (kuruluysa otomatik gizlenir).
   * **Sıfır Paketleyici (Zero-Bundler) Capacitor Entegrasyonu:** `capacitor.config.json` ile saf Vanilla JS mimarisini bozmadan Android derleme hazırlığı.
 
@@ -49,10 +50,9 @@ Bu belge, Taboo kelime tahmin oyunu için gelecekte hayata geçirilmesi planlana
 
 ---
 
-## ⚙️ Aşama 5: Gelişmiş Oyun Modları ve Ses Ayarları
+## ⚙️ Aşama 5: Gelişmiş Oyun Modları
 * **Amaç:** Oyun çeşitliliğini ve kişiselleştirmeyi artırmak.
 * **Detaylar:**
-  * **Ses Düzeyi & Açma/Kapama:** Ayarlar ekranında ses efektlerini kapatma/açma anahtarı.
   * **Hızlı Ölüm Modu (Sudden Death):** Beraberlik durumunda 1 kelimelik uzatma turu.
   * **Takım Sayısı Genişletmesi:** 3 veya 4 takımlı oyun modu desteği.
   * **Detaylı Oyun Sonu İstatistikleri:** En çok doğru bilen takım, tur başına ortalama süre/kelime hızı grafikleri.

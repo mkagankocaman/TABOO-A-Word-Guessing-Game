@@ -253,6 +253,129 @@ input[type="range"].range-red::-webkit-slider-thumb {
     color: #f87171;
 }
 
+/* ==========================================================================
+   🎛️ SES & TİTREŞİM TOGGLE SWITCH BİLEŞENİ
+   ========================================================================== */
+.settings-toggles-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(2, 6, 23, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 10px 12px;
+    border-radius: 12px;
+    margin-top: 2px;
+}
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.toggle-label-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toggle-icon {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.toggle-label-text {
+    font-size: clamp(11px, 3vw, 12px);
+    font-weight: 700;
+    color: #cbd5e1;
+}
+
+/* iOS Tarzı Şık Switch */
+.switch-toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.switch-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider-toggle {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #334155;
+    border-radius: 24px;
+    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.slider-toggle:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.switch-toggle input:checked + .slider-toggle {
+    background-color: #10b981;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+}
+
+.switch-toggle input:checked + .slider-toggle:before {
+    transform: translateX(20px);
+}
+
+/* ⏸️ PAUSE İÇİ HIZLI AYAR KARTI */
+.pause-settings-card {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 6px 12px;
+    width: 100%;
+    max-width: 230px;
+    margin: 0 auto;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.pause-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pause-settings-card .switch-toggle {
+    width: 38px;
+    height: 22px;
+}
+
+.pause-settings-card .slider-toggle:before {
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+}
+
+.pause-settings-card .switch-toggle input:checked + .slider-toggle:before {
+    transform: translateX(16px);
+}
+
+
 /* 📲 PWA KURULUM BANNER'I */
 .pwa-install-banner {
     display: flex;
@@ -746,44 +869,63 @@ input[type="range"].range-red::-webkit-slider-thumb {
     backdrop-filter: blur(12px);
     border-radius: 24px;
     z-index: 20;
-    padding: 20px;
+    padding: clamp(8px, 1.8vh, 16px) clamp(12px, 3vw, 16px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    gap: 14px;
+    gap: clamp(6px, 1.4vh, 10px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .pause-icon-circle {
-    padding: 14px;
-    background: rgba(245, 158, 11, 0.1);
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.25);
     border-radius: 50%;
     color: #f59e0b;
+    flex-shrink: 0;
 }
 
 .pause-title {
-    font-size: clamp(18px, 5.5vw, 24px);
+    font-size: clamp(16px, 4.8vw, 20px);
     font-weight: 900;
     color: #ffffff;
+    line-height: 1.15;
 }
 
 .pause-subtitle {
     color: #94a3b8;
-    font-size: clamp(11px, 3vw, 12px);
+    font-size: clamp(10.5px, 2.8vw, 11.5px);
+    line-height: 1.25;
+    max-width: 260px;
 }
 
 .pause-actions-col {
     display: flex;
     flex-direction: column;
     width: 100%;
-    gap: 10px;
+    gap: 8px;
     max-width: 220px;
-    margin-top: 4px;
+    flex-shrink: 0;
+}
+
+.pause-actions-col .btn {
+    padding: clamp(7px, 1.4vh, 9px) 14px;
+    font-size: clamp(12px, 3.2vw, 13px);
+    border-radius: 12px;
 }
 
 .btn-main-menu {
     background: rgba(30, 41, 59, 0.9);
     color: #f8fafc;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 10px;
 }
 
 /* ==========================================================================

@@ -23,6 +23,12 @@ const TRANSLATIONS = {
     deckResetSuccess: "Sıfırlandı!",
     startGameBtn: "Oyunu Başlat",
     
+    // Ses ve Titreşim Ayarları
+    soundEffectsLabel: "Ses Efektleri",
+    hapticsLabel: "Titreşim",
+    soundLabelShort: "Ses",
+    hapticsLabelShort: "Titreşim",
+    
     // PWA & Mobil
     pwaInstallTitle: "Uygulamayı Cihazına Yükle",
     pwaInstallDesc: "İnternet bağlantısı olmadan tam ekran oynamak için ana ekranına ekle.",
@@ -95,6 +101,12 @@ const TRANSLATIONS = {
     resetDeckBtn: "Reset Deck",
     deckResetSuccess: "Reset!",
     startGameBtn: "Start Game",
+    
+    // Audio & Haptics Settings
+    soundEffectsLabel: "Sound Effects",
+    hapticsLabel: "Haptic Feedback",
+    soundLabelShort: "Sound",
+    hapticsLabelShort: "Haptics",
     
     // PWA & Mobile
     pwaInstallTitle: "Install App on Device",

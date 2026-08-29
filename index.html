@@ -110,6 +110,31 @@
           <input type="range" id="input-pass-limit" min="0" max="10" step="1" value="3">
         </div>
 
+        <!-- 🔊 SES VE TİTREŞİM AYARLARI -->
+        <div class="settings-toggles-container">
+          <div class="toggle-row">
+            <div class="toggle-label-group">
+              <span class="toggle-icon">🔊</span>
+              <span id="lbl-sound-toggle" class="toggle-label-text">Ses Efektleri</span>
+            </div>
+            <label class="switch-toggle" for="toggle-sound-setup" title="Ses efektlerini aç/kapat">
+              <input type="checkbox" id="toggle-sound-setup" class="toggle-sound-input" checked>
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-label-group">
+              <span class="toggle-icon">📳</span>
+              <span id="lbl-haptics-toggle" class="toggle-label-text">Titreşim</span>
+            </div>
+            <label class="switch-toggle" for="toggle-haptics-setup" title="Titreşimi aç/kapat">
+              <input type="checkbox" id="toggle-haptics-setup" class="toggle-haptics-input" checked>
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+        </div>
+
         <!-- Deste Durumu & Sıfırlama -->
         <div class="deck-info-box">
           <span class="deck-info-text"><span id="lbl-remaining-cards">Kalan Kart:</span> <span id="deck-remaining-count" class="deck-info-count">585</span></span>
@@ -226,7 +251,7 @@
         <!-- Oyun Duraklatıldı Katmanı -->
         <div id="pause-overlay" class="pause-overlay-card hidden">
           <div class="pause-icon-circle">
-            <svg class="icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <line x1="10" y1="15" x2="10" y2="9"/>
               <line x1="14" y1="15" x2="14" y2="9"/>
@@ -235,6 +260,31 @@
           <h3 id="pause-title" class="pause-title">Oyun Durduruldu</h3>
           <p id="pause-subtitle" class="pause-subtitle">Kartlar gizlendi. Hazır olduğunuzda devam edin.</p>
           
+          <!-- ⏸️ Hızlı Ses & Titreşim Ayarları -->
+          <div class="pause-settings-card">
+            <div class="pause-toggle-row">
+              <span class="toggle-label-group">
+                <span class="toggle-icon">🔊</span>
+                <span id="lbl-pause-sound" class="toggle-label-text">Ses</span>
+              </span>
+              <label class="switch-toggle" for="toggle-sound-pause" title="Sesi aç/kapat">
+                <input type="checkbox" id="toggle-sound-pause" class="toggle-sound-input" checked>
+                <span class="slider-toggle"></span>
+              </label>
+            </div>
+
+            <div class="pause-toggle-row">
+              <span class="toggle-label-group">
+                <span class="toggle-icon">📳</span>
+                <span id="lbl-pause-haptics" class="toggle-label-text">Titreşim</span>
+              </span>
+              <label class="switch-toggle" for="toggle-haptics-pause" title="Titreşimi aç/kapat">
+                <input type="checkbox" id="toggle-haptics-pause" class="toggle-haptics-input" checked>
+                <span class="slider-toggle"></span>
+              </label>
+            </div>
+          </div>
+
           <div class="pause-actions-col">
             <button id="btn-resume" class="btn btn-green">
               <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
