@@ -22,6 +22,9 @@ const TRANSLATIONS = {
     resetDeckBtn: "Desteyi Yenile",
     deckResetSuccess: "Sıfırlandı!",
     startGameBtn: "Oyunu Başlat",
+    infinite: "Sonsuz (∞)",
+    infiniteShort: "∞",
+    penaltyValueText: (p) => p === 0 ? "0 Puan (Cezasız)" : `-${p} Puan`,
     
     // Ses ve Titreşim Ayarları
     soundEffectsLabel: "Ses Efektleri",
@@ -37,7 +40,7 @@ const TRANSLATIONS = {
     exitConfirm: "Aktif oyundan çıkmak ve ana menüye dönmek istediğinize emin misiniz?",
 
     // Hazırlık Ekranı
-    roundBadge: (r, t) => `Tur ${r} / ${t}`,
+    roundBadge: (r, t) => t === Infinity ? `Tur ${r} / ∞` : `Tur ${r} / ${t}`,
     readySubtitle: "Sıra sizde! Anlatıcı cihazı eline alsın.",
     startTurnBtn: "Süreyi Başlat",
     getReadyTitle: (team) => `${team} Hazırlan!`,
@@ -48,10 +51,11 @@ const TRANSLATIONS = {
     pauseSubtitle: "Kartlar gizlendi. Hazır olduğunuzda devam edin.",
     resumeBtn: "Devam Et",
     mainMenuBtn: "Ana Menü",
+    endTurnBtn: "Turu Bitir",
     undoBtn: "Geri Al",
     undoTitle: "Son yapılan hareketi geri al ve süreyi durdur",
-    tabuBtn: (p) => `TABU (-${p})`,
-    passBtn: (p) => `PAS (${p})`,
+    tabuBtn: (p) => p === 0 ? "TABU (0)" : `TABU (-${p})`,
+    passBtn: (p) => p === Infinity ? "PAS (∞)" : `PAS (${p})`,
     correctBtn: "DOĞRU (+1)",
     statCorrect: "Doğru",
     statTabu: "Tabu",
@@ -66,7 +70,7 @@ const TRANSLATIONS = {
     noWordsPlayed: "Bu turda kelime oynanmadı.",
     forbiddenWordsLabel: "YASAKLI KELİMELER",
     reviewCorrect: "+1 Doğru",
-    reviewTabu: (p) => `-${p} Tabu`,
+    reviewTabu: (p) => p === 0 ? "0 Tabu" : `-${p} Tabu`,
     reviewPass: "0 Pas",
     nextTurnBtn: "Sonraki Tura Geç",
     
@@ -101,6 +105,9 @@ const TRANSLATIONS = {
     resetDeckBtn: "Reset Deck",
     deckResetSuccess: "Reset!",
     startGameBtn: "Start Game",
+    infinite: "Infinite (∞)",
+    infiniteShort: "∞",
+    penaltyValueText: (p) => p === 0 ? "0 Points (No penalty)" : `-${p} Points`,
     
     // Audio & Haptics Settings
     soundEffectsLabel: "Sound Effects",
@@ -116,7 +123,7 @@ const TRANSLATIONS = {
     exitConfirm: "Are you sure you want to exit the game and return to the main menu?",
 
     // Ready Screen
-    roundBadge: (r, t) => `Round ${r} / ${t}`,
+    roundBadge: (r, t) => t === Infinity ? `Round ${r} / ∞` : `Round ${r} / ${t}`,
     readySubtitle: "Your turn! The describer should take the device.",
     startTurnBtn: "Start Timer",
     getReadyTitle: (team) => `${team} Get Ready!`,
@@ -127,10 +134,11 @@ const TRANSLATIONS = {
     pauseSubtitle: "Cards hidden. Resume when you are ready.",
     resumeBtn: "Resume",
     mainMenuBtn: "Main Menu",
+    endTurnBtn: "End Turn",
     undoBtn: "Undo",
     undoTitle: "Undo the last action and pause the timer",
-    tabuBtn: (p) => `TABOO (-${p})`,
-    passBtn: (p) => `PASS (${p})`,
+    tabuBtn: (p) => p === 0 ? "TABOO (0)" : `TABOO (-${p})`,
+    passBtn: (p) => p === Infinity ? "PASS (∞)" : `PASS (${p})`,
     correctBtn: "CORRECT (+1)",
     statCorrect: "Correct",
     statTabu: "Taboo",
@@ -145,7 +153,7 @@ const TRANSLATIONS = {
     noWordsPlayed: "No words were played this turn.",
     forbiddenWordsLabel: "FORBIDDEN WORDS",
     reviewCorrect: "+1 Correct",
-    reviewTabu: (p) => `-${p} Taboo`,
+    reviewTabu: (p) => p === 0 ? "0 Taboo" : `-${p} Taboo`,
     reviewPass: "0 Pass",
     nextTurnBtn: "Next Turn",
     

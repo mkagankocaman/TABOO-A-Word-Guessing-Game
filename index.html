@@ -49,7 +49,7 @@
         <h1 id="app-title-logo" class="setup-logo-title">TABU</h1>
       </div>
 
-      <div class="panel setup-form-panel">
+      <div class="setup-form-panel">
         <!-- Dil Seçimi -->
         <div class="lang-selector-group">
           <button id="btn-lang-tr" class="btn-lang active" type="button">
@@ -62,56 +62,86 @@
           </button>
         </div>
 
-        <div id="lbl-game-settings" class="panel-header-title">OYUN AYARLARI</div>
-        
-        <!-- Takım İsimleri -->
-        <div class="form-group">
-          <label id="lbl-team1" for="team1-name">1. Takım Adı</label>
-          <input type="text" id="team1-name" value="" placeholder="Kırmızı Takım" maxlength="20" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label id="lbl-team2" for="team2-name">2. Takım Adı</label>
-          <input type="text" id="team2-name" value="" placeholder="Mavi Takım" maxlength="20" autocomplete="off">
-        </div>
-
-        <!-- Tur Süresi -->
-        <div class="form-group">
-          <div class="slider-row-label">
-            <label id="lbl-turn-time" for="input-time">Tur Süresi</label>
-            <span id="time-val" class="slider-val-amber">60 saniye</span>
+        <!-- 👥 BÖLÜM 1: TAKIMLAR -->
+        <div class="setup-section-card">
+          <div id="lbl-teams-title" class="section-title">TAKIMLAR</div>
+          <div class="team-inputs-grid">
+            <div class="form-group team-input-group team-red-group">
+              <div class="team-label-row">
+                <span class="team-dot team-dot-red"></span>
+                <label id="lbl-team1" for="team1-name">1. Takım</label>
+              </div>
+              <input type="text" id="team1-name" value="" placeholder="Kırmızı Takım" maxlength="20" autocomplete="off">
+            </div>
+            <div class="form-group team-input-group team-blue-group">
+              <div class="team-label-row">
+                <span class="team-dot team-dot-blue"></span>
+                <label id="lbl-team2" for="team2-name">2. Takım</label>
+              </div>
+              <input type="text" id="team2-name" value="" placeholder="Mavi Takım" maxlength="20" autocomplete="off">
+            </div>
           </div>
-          <input type="range" id="input-time" min="30" max="120" step="15" value="60">
         </div>
 
-        <!-- Toplam Tur -->
-        <div class="form-group">
-          <div class="slider-row-label">
-            <label id="lbl-total-rounds" for="input-rounds">Toplam Tur Sayısı</label>
-            <span id="rounds-val" class="slider-val-amber">3 Tur</span>
+        <!-- 🎮 BÖLÜM 2: OYUN KURALLARI -->
+        <div class="setup-section-card">
+          <div id="lbl-game-settings" class="section-title">OYUN KURALLARI</div>
+          
+          <!-- Tur Süresi: 15s to 120s step 15, 135=Sonsuz, default 60s -->
+          <div class="form-group">
+            <div class="slider-row-label">
+              <label id="lbl-turn-time" for="input-time">Tur Süresi</label>
+              <span id="time-val" class="slider-val-badge slider-val-amber">60 saniye</span>
+            </div>
+            <div class="range-slider-wrapper">
+              <input type="range" id="input-time" min="15" max="135" step="15" value="60">
+            </div>
           </div>
-          <input type="range" id="input-rounds" min="1" max="20" step="1" value="3">
-        </div>
 
-        <!-- Tabu Ceza Puanı -->
-        <div class="form-group">
-          <div class="slider-row-label">
-            <label id="lbl-tabu-penalty" for="input-tabu-penalty">Tabu Ceza Puanı</label>
-            <span id="tabu-penalty-val" class="slider-val-red">-1 Puan</span>
+          <!-- Toplam Tur: 1 to 20 step 1, 21=Sonsuz, default 10 Tur -->
+          <div class="form-group">
+            <div class="slider-row-label">
+              <label id="lbl-total-rounds" for="input-rounds">Toplam Tur Sayısı</label>
+              <span id="rounds-val" class="slider-val-badge slider-val-amber">10 Tur</span>
+            </div>
+            <div class="range-slider-wrapper">
+              <input type="range" id="input-rounds" min="1" max="21" step="1" value="10">
+            </div>
           </div>
-          <input type="range" id="input-tabu-penalty" class="range-red" min="1" max="5" step="1" value="1">
-        </div>
 
-        <!-- Pas Hakkı -->
-        <div class="form-group">
-          <div class="slider-row-label">
-            <label id="lbl-pass-limit" for="input-pass-limit">Her Turdaki Pas Hakkı</label>
-            <span id="pass-limit-val" class="slider-val-amber">3 Pas</span>
+          <!-- Tabu Ceza Puanı: Stepper (0-10, default 1) -->
+          <div class="form-group">
+            <div class="slider-row-label">
+              <label id="lbl-tabu-penalty" for="input-tabu-penalty">Tabu Ceza Puanı</label>
+              <span id="tabu-penalty-val" class="slider-val-badge slider-val-red">-1 Puan</span>
+            </div>
+            <div class="stepper-container">
+              <button type="button" id="btn-penalty-minus" class="stepper-btn stepper-btn-minus" title="Ceza puanını azalt">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <div class="stepper-input-wrapper">
+                <input type="number" id="input-tabu-penalty" class="stepper-input" min="0" max="10" step="1" value="1" inputmode="numeric">
+              </div>
+              <button type="button" id="btn-penalty-plus" class="stepper-btn stepper-btn-plus" title="Ceza puanını artır">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
           </div>
-          <input type="range" id="input-pass-limit" min="0" max="10" step="1" value="3">
+
+          <!-- Pas Hakkı: 0 to 10 step 1, 11=Sonsuz, default 3 Pas -->
+          <div class="form-group">
+            <div class="slider-row-label">
+              <label id="lbl-pass-limit" for="input-pass-limit">Her Turdaki Pas Hakkı</label>
+              <span id="pass-limit-val" class="slider-val-badge slider-val-amber">3 Pas</span>
+            </div>
+            <div class="range-slider-wrapper">
+              <input type="range" id="input-pass-limit" min="0" max="11" step="1" value="3">
+            </div>
+          </div>
         </div>
 
-        <!-- 🔊 SES VE TİTREŞİM AYARLARI -->
-        <div class="settings-toggles-container">
+        <!-- 🔊 BÖLÜM 3: SES VE TİTREŞİM AYARLARI -->
+        <div class="setup-section-card settings-toggles-container">
           <div class="toggle-row">
             <div class="toggle-label-group">
               <span class="toggle-icon">🔊</span>
@@ -135,7 +165,7 @@
           </div>
         </div>
 
-        <!-- Deste Durumu & Sıfırlama -->
+        <!-- 🃏 BÖLÜM 4: Deste Durumu & Sıfırlama -->
         <div class="deck-info-box">
           <span class="deck-info-text"><span id="lbl-remaining-cards">Kalan Kart:</span> <span id="deck-remaining-count" class="deck-info-count">585</span></span>
           <button id="btn-reset-deck" class="btn-reset-deck" title="Oynanmış kart geçmişini sıfırla">Desteyi Yenile</button>
@@ -207,6 +237,11 @@
         </div>
 
         <div class="play-controls-group">
+          <!-- Turu Bitir (Sonsuz sürede görünür) -->
+          <button id="btn-finish-turn" class="btn-finish-turn hidden" title="Turu Bitir">
+            <span id="btn-finish-turn-text">Turu Bitir</span>
+          </button>
+
           <!-- Durdur Butonu -->
           <button id="btn-pause" class="btn-pause-toggle" title="Oyunu Durdur">
             <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

@@ -879,6 +879,40 @@ async function switchLanguage(lang) {
   await loadAndInitDeck(lang, false);
 }
 
+function updateSliderTrackFill(slider) {
+  if (!slider) return;
+  const min = parseFloat(slider.min) || 0;
+  const max = parseFloat(slider.max) || 100;
+  const val = parseFloat(slider.value) || 0;
+  const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
+  slider.style.setProperty('--slider-fill', `${pct}%`);
+}
+
+function getTabuPenaltyValue() {
+  const el = document.getElementById("input-tabu-penalty");
+  if (!el) return 1;
+  let val = parseInt(el.value, 10);
+  if (isNaN(val)) return 1;
+  return Math.max(0, Math.min(10, val));
+}
+
+function setTabuPenaltyValue(newVal, triggerFeedback = false) {
+  const el = document.getElementById("input-tabu-penalty");
+  const badge = document.getElementById("tabu-penalty-val");
+  if (!el) return;
+  let val = parseInt(newVal, 10);
+  if (isNaN(val)) val = 1;
+  val = Math.max(0, Math.min(10, val));
+  el.value = val;
+  if (badge) {
+    badge.textContent = t('penaltyValueText', val);
+  }
+  if (triggerFeedback) {
+    soundFX.playReviewToggle();
+    HapticManager.trigger('pass');
+  }
+}
+
 function applyLanguageUI() {
   const isTr = gameState.currentLanguage === 'tr';
 
@@ -889,6 +923,10 @@ function applyLanguageUI() {
   // Başlıklar & Etiketler
   document.getElementById("splash-title").textContent = t('appTitle');
   document.getElementById("app-title-logo").textContent = t('appTitle');
+  
+  const lblTeamsTitle = document.getElementById("lbl-teams-title");
+  if (lblTeamsTitle) lblTeamsTitle.textContent = isTr ? "TAKIMLAR" : "TEAMS";
+
   document.getElementById("lbl-game-settings").textContent = t('gameSettings');
   document.getElementById("lbl-team1").textContent = t('team1Label');
   document.getElementById("lbl-team2").textContent = t('team2Label');
@@ -899,6 +937,9 @@ function applyLanguageUI() {
   document.getElementById("lbl-remaining-cards").textContent = t('remainingCards') + ":";
   document.getElementById("btn-reset-deck").textContent = t('resetDeckBtn');
   document.getElementById("btn-start-game-text").textContent = t('startGameBtn');
+
+  const btnFinishTurnText = document.getElementById("btn-finish-turn-text");
+  if (btnFinishTurnText) btnFinishTurnText.textContent = t('endTurnBtn');
 
   // Ses ve Titreşim Etiketleri
   const lblSound = document.getElementById("lbl-sound-toggle");
@@ -919,16 +960,27 @@ function applyLanguageUI() {
   if (pwaDesc) pwaDesc.textContent = t('pwaInstallDesc');
   if (pwaBtnText) pwaBtnText.textContent = t('pwaInstallBtn');
 
-  // Slider Değer Göstergeleri
+  // Slider & Stepper Değer Göstergeleri
   const inputTime = document.getElementById("input-time");
   const inputRounds = document.getElementById("input-rounds");
-  const inputTabuPenalty = document.getElementById("input-tabu-penalty");
   const inputPassLimit = document.getElementById("input-pass-limit");
 
-  document.getElementById("time-val").textContent = `${inputTime.value} ${t('secondsUnit')}`;
-  document.getElementById("rounds-val").textContent = `${inputRounds.value} ${t('roundsUnit')}`;
-  document.getElementById("tabu-penalty-val").textContent = `-${inputTabuPenalty.value} ${t('penaltyUnit')}`;
-  document.getElementById("pass-limit-val").textContent = `${inputPassLimit.value} ${t('passUnit')}`;
+  const timeVal = parseInt(inputTime.value);
+  document.getElementById("time-val").textContent = timeVal >= 135 ? t('infinite') : `${timeVal} ${t('secondsUnit')}`;
+
+  const roundsVal = parseInt(inputRounds.value);
+  document.getElementById("rounds-val").textContent = roundsVal >= 21 ? t('infinite') : `${roundsVal} ${t('roundsUnit')}`;
+
+  const penaltyVal = getTabuPenaltyValue();
+  document.getElementById("tabu-penalty-val").textContent = t('penaltyValueText', penaltyVal);
+
+  const passVal = parseInt(inputPassLimit.value);
+  document.getElementById("pass-limit-val").textContent = passVal >= 11 ? t('infinite') : `${passVal} ${t('passUnit')}`;
+
+  // Slider fill güncelle
+  updateSliderTrackFill(inputTime);
+  updateSliderTrackFill(inputRounds);
+  updateSliderTrackFill(inputPassLimit);
 
   // Varsayılan takım isimlerini güncelle
   const t1Input = document.getElementById("team1-name");
@@ -1001,34 +1053,50 @@ function loadSavedSettings() {
         t2Input.value = s.team2;
       }
     }
-    if (s.time) {
-      document.getElementById("input-time").value = s.time;
-      document.getElementById("time-val").textContent = `${s.time} ${t('secondsUnit')}`;
+    if (s.time !== undefined) {
+      const timeInput = document.getElementById("input-time");
+      if (s.time === 'infinity' || s.time === Infinity) {
+        timeInput.value = 135;
+      } else {
+        timeInput.value = s.time;
+      }
     }
-    if (s.rounds) {
-      document.getElementById("input-rounds").value = s.rounds;
-      document.getElementById("rounds-val").textContent = `${s.rounds} ${t('roundsUnit')}`;
+    if (s.rounds !== undefined) {
+      const roundsInput = document.getElementById("input-rounds");
+      if (s.rounds === 'infinity' || s.rounds === Infinity) {
+        roundsInput.value = 21;
+      } else {
+        roundsInput.value = s.rounds;
+      }
     }
-    if (s.tabuPenalty) {
-      document.getElementById("input-tabu-penalty").value = s.tabuPenalty;
-      document.getElementById("tabu-penalty-val").textContent = `-${s.tabuPenalty} ${t('penaltyUnit')}`;
+    if (s.tabuPenalty !== undefined) {
+      setTabuPenaltyValue(s.tabuPenalty, false);
     }
     if (s.passLimit !== undefined) {
-      document.getElementById("input-pass-limit").value = s.passLimit;
-      document.getElementById("pass-limit-val").textContent = `${s.passLimit} ${t('passUnit')}`;
+      const passInput = document.getElementById("input-pass-limit");
+      if (s.passLimit === 'infinity' || s.passLimit === Infinity) {
+        passInput.value = 11;
+      } else {
+        passInput.value = s.passLimit;
+      }
     }
   } catch (e) {}
 }
 
 function saveCurrentSettings() {
   try {
+    const timeVal = parseInt(document.getElementById("input-time").value);
+    const roundsVal = parseInt(document.getElementById("input-rounds").value);
+    const penaltyVal = getTabuPenaltyValue();
+    const passVal = parseInt(document.getElementById("input-pass-limit").value);
+
     const s = {
       team1: document.getElementById("team1-name").value.trim(),
       team2: document.getElementById("team2-name").value.trim(),
-      time: parseInt(document.getElementById("input-time").value),
-      rounds: parseInt(document.getElementById("input-rounds").value),
-      tabuPenalty: parseInt(document.getElementById("input-tabu-penalty").value),
-      passLimit: parseInt(document.getElementById("input-pass-limit").value)
+      time: timeVal >= 135 ? 'infinity' : timeVal,
+      rounds: roundsVal >= 21 ? 'infinity' : roundsVal,
+      tabuPenalty: penaltyVal,
+      passLimit: passVal >= 11 ? 'infinity' : passVal
     };
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(s));
   } catch (e) {}
@@ -1071,15 +1139,87 @@ function initSetupScreen() {
   const roundsVal = document.getElementById("rounds-val");
   const inputTabuPenalty = document.getElementById("input-tabu-penalty");
   const tabuPenaltyVal = document.getElementById("tabu-penalty-val");
+  const btnPenaltyMinus = document.getElementById("btn-penalty-minus");
+  const btnPenaltyPlus = document.getElementById("btn-penalty-plus");
   const inputPassLimit = document.getElementById("input-pass-limit");
   const passLimitVal = document.getElementById("pass-limit-val");
   const btnResetDeck = document.getElementById("btn-reset-deck");
 
-  inputTime.addEventListener("input", (e) => timeVal.textContent = `${e.target.value} ${t('secondsUnit')}`);
-  inputRounds.addEventListener("input", (e) => roundsVal.textContent = `${e.target.value} ${t('roundsUnit')}`);
-  inputTabuPenalty.addEventListener("input", (e) => tabuPenaltyVal.textContent = `-${e.target.value} ${t('penaltyUnit')}`);
-  inputPassLimit.addEventListener("input", (e) => passLimitVal.textContent = `${e.target.value} ${t('passUnit')}`);
+  // 1. Tur Süresi Slider
+  let lastTimeValue = inputTime.value;
+  inputTime.addEventListener("input", (e) => {
+    const val = parseInt(e.target.value);
+    timeVal.textContent = val >= 135 ? t('infinite') : `${val} ${t('secondsUnit')}`;
+    updateSliderTrackFill(inputTime);
+    if (val !== lastTimeValue) {
+      lastTimeValue = val;
+      HapticManager.trigger('pass');
+    }
+  });
 
+  // 2. Toplam Tur Slider
+  let lastRoundsValue = inputRounds.value;
+  inputRounds.addEventListener("input", (e) => {
+    const val = parseInt(e.target.value);
+    roundsVal.textContent = val >= 21 ? t('infinite') : `${val} ${t('roundsUnit')}`;
+    updateSliderTrackFill(inputRounds);
+    if (val !== lastRoundsValue) {
+      lastRoundsValue = val;
+      HapticManager.trigger('pass');
+    }
+  });
+
+  // 3. Tabu Ceza Puanı Stepper
+  if (btnPenaltyMinus) {
+    btnPenaltyMinus.addEventListener("click", () => {
+      setTabuPenaltyValue(getTabuPenaltyValue() - 1, true);
+    });
+  }
+
+  if (btnPenaltyPlus) {
+    btnPenaltyPlus.addEventListener("click", () => {
+      setTabuPenaltyValue(getTabuPenaltyValue() + 1, true);
+    });
+  }
+
+  if (inputTabuPenalty) {
+    inputTabuPenalty.addEventListener("input", (e) => {
+      // Yalnızca sayısal giriş
+      let cleaned = e.target.value.replace(/[^0-9]/g, '');
+      if (cleaned !== '') {
+        let num = parseInt(cleaned, 10);
+        if (num > 10) num = 10;
+        if (num < 0) num = 0;
+        e.target.value = num;
+        tabuPenaltyVal.textContent = t('penaltyValueText', num);
+      }
+    });
+
+    inputTabuPenalty.addEventListener("blur", (e) => {
+      let num = parseInt(e.target.value, 10);
+      if (isNaN(num)) num = 1;
+      setTabuPenaltyValue(num, false);
+    });
+  }
+
+  // 4. Pas Hakkı Slider
+  let lastPassValue = inputPassLimit.value;
+  inputPassLimit.addEventListener("input", (e) => {
+    const val = parseInt(e.target.value);
+    passLimitVal.textContent = val >= 11 ? t('infinite') : `${val} ${t('passUnit')}`;
+    updateSliderTrackFill(inputPassLimit);
+    if (val !== lastPassValue) {
+      lastPassValue = val;
+      HapticManager.trigger('pass');
+    }
+  });
+
+  // Başlangıç track dolguları
+  updateSliderTrackFill(inputTime);
+  updateSliderTrackFill(inputRounds);
+  updateSliderTrackFill(inputPassLimit);
+
+  // Desteyi Yenile
   btnResetDeck.addEventListener("click", () => {
     initDeckPool(true);
     HapticManager.trigger('pass');
@@ -1087,6 +1227,7 @@ function initSetupScreen() {
     setTimeout(() => btnResetDeck.textContent = t('resetDeckBtn'), 1200);
   });
 
+  // Oyunu Başlat
   document.getElementById("btn-start-game").addEventListener("click", () => {
     soundFX.init();
     HapticManager.trigger('pass');
@@ -1100,10 +1241,14 @@ function initSetupScreen() {
     gameState.teams[1].name = team2;
     gameState.teams[1].score = 0;
 
-    gameState.turnDuration = parseInt(inputTime.value);
-    gameState.totalRounds = parseInt(inputRounds.value);
-    gameState.tabuPenalty = parseInt(inputTabuPenalty.value);
-    gameState.passLimit = parseInt(inputPassLimit.value);
+    const timeRaw = parseInt(inputTime.value);
+    const roundsRaw = parseInt(inputRounds.value);
+    const passRaw = parseInt(inputPassLimit.value);
+
+    gameState.turnDuration = timeRaw >= 135 ? Infinity : timeRaw;
+    gameState.totalRounds = roundsRaw >= 21 ? Infinity : roundsRaw;
+    gameState.tabuPenalty = getTabuPenaltyValue();
+    gameState.passLimit = passRaw >= 11 ? Infinity : passRaw;
 
     gameState.currentRound = 1;
     gameState.currentTeamIndex = 0;
@@ -1264,6 +1409,16 @@ function startTurn() {
   document.getElementById("play-team-badge").style.background = gameState.currentTeamIndex === 0 ? '#ef4444' : '#3b82f6';
   document.getElementById("label-tabu-btn").textContent = t('tabuBtn', gameState.tabuPenalty);
 
+  // Sonsuz süre modunda "Turu Bitir" butonunu göster
+  const btnFinish = document.getElementById("btn-finish-turn");
+  if (btnFinish) {
+    if (gameState.turnDuration === Infinity) {
+      btnFinish.classList.remove("hidden");
+    } else {
+      btnFinish.classList.add("hidden");
+    }
+  }
+
   updateUndoButtonUI();
   updateTurnStatsUI();
   updateTimerUI();
@@ -1280,6 +1435,18 @@ function updateTimerUI() {
   const timerBorder = document.getElementById("timer-border");
   const timerBox = document.getElementById("timer-box");
   const timerIcon = document.getElementById("timer-icon");
+
+  if (gameState.turnDuration === Infinity || gameState.timeLeft === Infinity) {
+    timerEl.textContent = "∞";
+    if (timerBorder && gameState.timerPathLength > 0) {
+      timerBorder.style.strokeDashoffset = 0;
+      timerBorder.setAttribute("stroke", "#facc15");
+    }
+    timerEl.style.color = "#facc15";
+    timerIcon.style.color = "#facc15";
+    if (timerBox) timerBox.classList.remove("timer-warning");
+    return;
+  }
 
   timerEl.textContent = gameState.timeLeft;
 
@@ -1305,6 +1472,12 @@ function updateTimerUI() {
 
 function startTimer() {
   clearInterval(gameState.timerInterval);
+  
+  if (gameState.turnDuration === Infinity || gameState.timeLeft === Infinity) {
+    updateTimerUI();
+    return;
+  }
+
   gameState.turnEndTime = Date.now() + (gameState.timeLeft * 1000);
   gameState.lastTickedSecond = gameState.timeLeft;
   updateTimerUI();
@@ -1475,7 +1648,9 @@ document.getElementById("btn-undo").addEventListener("click", () => {
   } else if (last.type === 'tabu') {
     gameState.turnStats.tabu = Math.max(0, gameState.turnStats.tabu - 1);
   } else if (last.type === 'pass') {
-    gameState.turnPassesLeft++;
+    if (gameState.passLimit !== Infinity && gameState.turnPassesLeft !== Infinity) {
+      gameState.turnPassesLeft++;
+    }
   }
 
   if (gameState.turnHistory.length > 0) {
@@ -1509,8 +1684,18 @@ document.getElementById("btn-undo").addEventListener("click", () => {
 });
 
 // ==========================================================================
-// 🎮 OYUN BUTONLARI (DOĞRU, TABU, PAS)
+// 🎮 OYUN BUTONLARI (DOĞRU, TABU, PAS, TURU BİTİR)
 // ==========================================================================
+const btnFinishTurn = document.getElementById("btn-finish-turn");
+if (btnFinishTurn) {
+  btnFinishTurn.addEventListener("click", () => {
+    if (gameState.isAnimating || (gameState.isPaused && gameState.pauseReason === 'manual')) return;
+    soundFX.playTimeUpChime();
+    HapticManager.trigger('timeup');
+    endTurn();
+  });
+}
+
 document.getElementById("btn-correct").addEventListener("click", () => {
   if (gameState.isAnimating || (gameState.isPaused && gameState.pauseReason === 'manual')) return;
   resumeIfPausedByUndo();
@@ -1554,7 +1739,7 @@ document.getElementById("btn-tabu").addEventListener("click", () => {
 });
 
 document.getElementById("btn-pass").addEventListener("click", () => {
-  if (gameState.isAnimating || gameState.turnPassesLeft <= 0 || (gameState.isPaused && gameState.pauseReason === 'manual')) return;
+  if (gameState.isAnimating || (gameState.passLimit !== Infinity && gameState.turnPassesLeft <= 0) || (gameState.isPaused && gameState.pauseReason === 'manual')) return;
   resumeIfPausedByUndo();
   soundFX.playPassWhoosh();
   HapticManager.trigger('pass');
@@ -1563,7 +1748,9 @@ document.getElementById("btn-pass").addEventListener("click", () => {
   markCardAsPlayed(played);
 
   gameState.lastAction = { type: "pass", card: played };
-  gameState.turnPassesLeft--;
+  if (gameState.passLimit !== Infinity) {
+    gameState.turnPassesLeft--;
+  }
   gameState.turnHistory.push({ card: played, type: "pass" });
 
   updateUndoButtonUI();
@@ -1577,11 +1764,11 @@ document.getElementById("btn-pass").addEventListener("click", () => {
 function updateTurnStatsUI() {
   document.getElementById("stat-correct").textContent = gameState.turnStats.correct;
   document.getElementById("stat-tabu").textContent = gameState.turnStats.tabu;
-  document.getElementById("stat-pass").textContent = gameState.turnPassesLeft;
+  document.getElementById("stat-pass").textContent = (gameState.passLimit === Infinity || gameState.turnPassesLeft === Infinity) ? "∞" : gameState.turnPassesLeft;
 
   const btnPass = document.getElementById("btn-pass");
-  document.getElementById("label-pass-btn").textContent = t('passBtn', gameState.turnPassesLeft);
-  btnPass.disabled = gameState.turnPassesLeft <= 0;
+  document.getElementById("label-pass-btn").textContent = t('passBtn', (gameState.passLimit === Infinity || gameState.turnPassesLeft === Infinity) ? Infinity : gameState.turnPassesLeft);
+  btnPass.disabled = (gameState.passLimit !== Infinity && gameState.turnPassesLeft <= 0);
 }
 
 // ==========================================================================
@@ -1764,7 +1951,7 @@ document.getElementById("btn-next-turn").addEventListener("click", () => {
     gameState.currentRound++;
   }
 
-  if (gameState.currentRound > gameState.totalRounds) {
+  if (gameState.totalRounds !== Infinity && gameState.currentRound > gameState.totalRounds) {
     renderGameOverScreen();
   } else {
     prepareReadyScreen();
