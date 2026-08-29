@@ -2,7 +2,7 @@
  * TABOO WORD GAME - SERVICE WORKER (OFFLINE PWA ENGINE)
  */
 
-const CACHE_NAME = 'taboo-cache-v2';
+const CACHE_NAME = 'taboo-cache-v3';
 
 const PRECACHE_ASSETS = [
   './',
@@ -16,7 +16,7 @@ const PRECACHE_ASSETS = [
   './icons/icon.svg'
 ];
 
-// 1. Kurulum: Tüm statik dosyaları ve dinamik kart havuzlarını önbelleğe al
+// 1. Kurulum: Tüm statik dosyaları önbelleğe al ve yeni Service Worker'ı hemen aktif et
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -27,7 +27,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// 2. Aktivasyon: Eski sürüm önbelleklerini temizle ve kontrolü hemen devral
+// 2. Aktivasyon: Eski sürüm önbelleklerini temizle ve tüm açık sekmelerin kontrolünü anında devral
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -40,52 +40,54 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. İstek Yakalama (Fetch): Cache-First / Stale-While-Revalidate hibrit stratejisi
+// 3. İstek Yakalama (Fetch)
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  // Sadece HTTP/HTTPS protokollerini işle (chrome-extension vb. hariç)
+  // Sadece HTTP/HTTPS protokollerini işle
   if (!event.request.url.startsWith('http')) return;
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // Önbellekte varsa hemen döndür, arka planda ağı kontrol et (Stale-While-Revalidate)
-      if (cachedResponse) {
-        if (event.request.url.startsWith(self.location.origin)) {
-          fetch(event.request)
-            .then((networkResponse) => {
-              if (networkResponse && networkResponse.status === 200) {
-                const responseClone = networkResponse.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                  cache.put(event.request, responseClone);
-                });
-              }
-            })
-            .catch(() => {
-              // Çevrimdışı durumda sessizce devam et
-            });
-        }
-        return cachedResponse;
-      }
+  const isNavigation = event.request.mode === 'navigate' || 
+                       (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'));
 
-      // Önbellekte yoksa ağdan çek ve önbelleğe yaz
-      return fetch(event.request)
+  // A. HTML / Sayfa Gezintisi: NETWORK-FIRST (Çevrimiçiyken daima en güncel arayüzü getir, çevrimdışıysa önbellekten sun)
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request)
         .then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'opaque') {
-            return networkResponse;
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
           }
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
           return networkResponse;
         })
         .catch(() => {
-          // Ağ yoksa ve sayfa gezintisi ise index.html döndür
-          if (event.request.headers.get('accept')?.includes('text/html')) {
-            return caches.match('./index.html');
+          return caches.match('./index.html') || caches.match('./');
+        })
+    );
+    return;
+  }
+
+  // B. Statik Dosyalar (CSS, JS, İkonlar, Kartlar): STALE-WHILE-REVALIDATE (Önbellekten hızlı sun, arka planda güncelle)
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
           }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Çevrimdışıyken hata fırlatma, önbellekte varsa zaten dönmüştür
         });
+
+      return cachedResponse || fetchPromise;
     })
   );
 });

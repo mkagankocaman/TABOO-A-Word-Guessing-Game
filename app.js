@@ -631,10 +631,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Tercihleri ve Ses/Titreşim Yöneticisini Başlat
   PreferencesManager.init();
 
-  // Service Worker Kaydı (PWA Çevrimdışı Desteği)
+  // Service Worker Kaydı (PWA Çevrimdışı Desteği & Otomatik Güncelleme)
   if ('serviceWorker' in navigator) {
     try {
-      await navigator.serviceWorker.register('sw.js');
+      const reg = await navigator.serviceWorker.register('sw.js');
+      if (reg) {
+        reg.update().catch(() => {});
+      }
     } catch (err) {
       console.warn('Service Worker kaydı başarısız:', err);
     }
