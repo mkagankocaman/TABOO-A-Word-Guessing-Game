@@ -15,7 +15,7 @@
   <!-- 🚀 SPLASH SCREEN -->
   <div id="splash-screen">
     <div id="splash-logo">
-      <h1 class="splash-title">TABU</h1>
+      <h1 id="splash-title" class="splash-title">TABU</h1>
     </div>
     <div class="splash-bar-container">
       <div id="splash-bar-fill" class="splash-bar-fill"></div>
@@ -39,26 +39,38 @@
     <div id="screen-setup" class="screen">
       <!-- Üst TABU Başlığı -->
       <div class="setup-logo-container">
-        <h1 class="setup-logo-title">TABU</h1>
+        <h1 id="app-title-logo" class="setup-logo-title">TABU</h1>
       </div>
 
       <div class="panel setup-form-panel">
-        <div class="panel-header-title">OYUN AYARLARI</div>
+        <!-- Dil Seçimi -->
+        <div class="lang-selector-group">
+          <button id="btn-lang-tr" class="btn-lang active" type="button">
+            <span>🇹🇷</span>
+            <span>Türkçe</span>
+          </button>
+          <button id="btn-lang-en" class="btn-lang" type="button">
+            <span>🇬🇧</span>
+            <span>English</span>
+          </button>
+        </div>
+
+        <div id="lbl-game-settings" class="panel-header-title">OYUN AYARLARI</div>
         
         <!-- Takım İsimleri -->
         <div class="form-group">
-          <label for="team1-name">1. Takım Adı</label>
-          <input type="text" id="team1-name" value="Kırmızı Takım" maxlength="20" autocomplete="off">
+          <label id="lbl-team1" for="team1-name">1. Takım Adı</label>
+          <input type="text" id="team1-name" value="" placeholder="Kırmızı Takım" maxlength="20" autocomplete="off">
         </div>
         <div class="form-group">
-          <label for="team2-name">2. Takım Adı</label>
-          <input type="text" id="team2-name" value="Mavi Takım" maxlength="20" autocomplete="off">
+          <label id="lbl-team2" for="team2-name">2. Takım Adı</label>
+          <input type="text" id="team2-name" value="" placeholder="Mavi Takım" maxlength="20" autocomplete="off">
         </div>
 
         <!-- Tur Süresi -->
         <div class="form-group">
           <div class="slider-row-label">
-            <label for="input-time">Tur Süresi</label>
+            <label id="lbl-turn-time" for="input-time">Tur Süresi</label>
             <span id="time-val" class="slider-val-amber">60 saniye</span>
           </div>
           <input type="range" id="input-time" min="30" max="120" step="15" value="60">
@@ -67,7 +79,7 @@
         <!-- Toplam Tur -->
         <div class="form-group">
           <div class="slider-row-label">
-            <label for="input-rounds">Toplam Tur Sayısı</label>
+            <label id="lbl-total-rounds" for="input-rounds">Toplam Tur Sayısı</label>
             <span id="rounds-val" class="slider-val-amber">3 Tur</span>
           </div>
           <input type="range" id="input-rounds" min="1" max="20" step="1" value="3">
@@ -76,7 +88,7 @@
         <!-- Tabu Ceza Puanı -->
         <div class="form-group">
           <div class="slider-row-label">
-            <label for="input-tabu-penalty">Tabu Ceza Puanı</label>
+            <label id="lbl-tabu-penalty" for="input-tabu-penalty">Tabu Ceza Puanı</label>
             <span id="tabu-penalty-val" class="slider-val-red">-1 Puan</span>
           </div>
           <input type="range" id="input-tabu-penalty" class="range-red" min="1" max="5" step="1" value="1">
@@ -85,7 +97,7 @@
         <!-- Pas Hakkı -->
         <div class="form-group">
           <div class="slider-row-label">
-            <label for="input-pass-limit">Her Turdaki Pas Hakkı</label>
+            <label id="lbl-pass-limit" for="input-pass-limit">Her Turdaki Pas Hakkı</label>
             <span id="pass-limit-val" class="slider-val-amber">3 Pas</span>
           </div>
           <input type="range" id="input-pass-limit" min="0" max="10" step="1" value="3">
@@ -93,14 +105,14 @@
 
         <!-- Deste Durumu & Sıfırlama -->
         <div class="deck-info-box">
-          <span class="deck-info-text">Kalan Kart: <span id="deck-remaining-count" class="deck-info-count">585</span></span>
+          <span class="deck-info-text"><span id="lbl-remaining-cards">Kalan Kart:</span> <span id="deck-remaining-count" class="deck-info-count">585</span></span>
           <button id="btn-reset-deck" class="btn-reset-deck" title="Oynanmış kart geçmişini sıfırla">Desteyi Yenile</button>
         </div>
       </div>
 
       <button id="btn-start-game" class="btn btn-primary">
         <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        <span>Oyunu Başlat</span>
+        <span id="btn-start-game-text">Oyunu Başlat</span>
       </button>
     </div>
 
@@ -111,7 +123,7 @@
           Tur 1 / 3
         </span>
         <h2 id="ready-team-name" class="ready-team-title">Kırmızı Takım</h2>
-        <p class="ready-subtitle">Sıra sizde! Anlatıcı cihazı eline alsın.</p>
+        <p id="ready-subtitle" class="ready-subtitle">Sıra sizde! Anlatıcı cihazı eline alsın.</p>
       </div>
 
       <!-- Skor Tablosu -->
@@ -128,7 +140,7 @@
 
       <button id="btn-start-turn" class="btn btn-green">
         <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        <span>Süreyi Başlat</span>
+        <span id="btn-start-turn-text">Süreyi Başlat</span>
       </button>
     </div>
 
@@ -171,13 +183,13 @@
       <!-- Anlık Tur Puan Özeti -->
       <div class="turn-stats-grid">
         <div class="stat-chip-green">
-          Doğru: <span id="stat-correct">0</span>
+          <span id="lbl-stat-correct">Doğru</span>: <span id="stat-correct">0</span>
         </div>
         <div class="stat-chip-red">
-          Tabu: <span id="stat-tabu">0</span>
+          <span id="lbl-stat-tabu">Tabu</span>: <span id="stat-tabu">0</span>
         </div>
         <div class="stat-chip-amber">
-          Kalan Pas: <span id="stat-pass">3</span>
+          <span id="lbl-stat-pass">Kalan Pas</span>: <span id="stat-pass">3</span>
         </div>
       </div>
 
@@ -193,20 +205,20 @@
               <line x1="14" y1="15" x2="14" y2="9"/>
             </svg>
           </div>
-          <h3 class="pause-title">Oyun Durduruldu</h3>
-          <p class="pause-subtitle">Kartlar gizlendi. Hazır olduğunuzda devam edin.</p>
+          <h3 id="pause-title" class="pause-title">Oyun Durduruldu</h3>
+          <p id="pause-subtitle" class="pause-subtitle">Kartlar gizlendi. Hazır olduğunuzda devam edin.</p>
           
           <div class="pause-actions-col">
             <button id="btn-resume" class="btn btn-green">
               <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              <span>Devam Et</span>
+              <span id="btn-resume-text">Devam Et</span>
             </button>
             <button id="btn-main-menu" class="btn btn-main-menu">
-              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                 <polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
-              <span>Ana Menü</span>
+              <span id="btn-main-menu-text">Ana Menü</span>
             </button>
           </div>
         </div>
@@ -221,7 +233,7 @@
                 <polyline points="1 4 1 10 7 10"/>
                 <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
               </svg>
-              <span>Geri Al</span>
+              <span id="btn-undo-text">Geri Al</span>
             </button>
           </div>
 
@@ -262,7 +274,7 @@
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
             <polyline points="22 4 12 14.01 9 11.01"/>
           </svg>
-          <span>DOĞRU (+1)</span>
+          <span id="label-correct-btn">DOĞRU (+1)</span>
         </button>
       </div>
 
@@ -271,21 +283,21 @@
     <!-- 📊 4. TUR ÖZET EKRANI -->
     <div id="screen-summary" class="screen hidden">
       <div class="summary-header">
-        <h2 class="summary-title">Tur Tamamlandı!</h2>
+        <h2 id="summary-title" class="summary-title">Tur Tamamlandı!</h2>
         <p id="summary-team-title" class="summary-team-subtitle">Kırmızı Takım Sonuçları</p>
       </div>
 
       <!-- Net Puan Panosu -->
       <div class="panel summary-net-box">
-        <span class="summary-net-label">Bu Turda Kazanılan Net Puan</span>
+        <span id="summary-net-label" class="summary-net-label">Bu Turda Kazanılan Net Puan</span>
         <p id="summary-net-score" class="summary-net-score-num">+5</p>
       </div>
 
       <!-- Tur Detay Geçmişi -->
       <div class="panel summary-history-panel">
         <div class="summary-history-header">
-          <span class="summary-history-title">Oynanan Kelimeler:</span>
-          <span class="summary-hint-text">Sonuçları düzeltmek için tıklayın</span>
+          <span id="summary-history-title" class="summary-history-title">Oynanan Kelimeler:</span>
+          <span id="summary-hint-text" class="summary-hint-text">Sonuçları düzeltmek için tıklayın</span>
         </div>
         <div id="summary-history-list" class="summary-history-list">
           <!-- JS dolduracak -->
@@ -294,7 +306,7 @@
 
       <!-- Sonraki Tura Geç Butonu -->
       <button id="btn-next-turn" class="btn btn-blue">
-        <span>Sonraki Tura Geç</span>
+        <span id="btn-next-turn-text">Sonraki Tura Geç</span>
         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"/>
           <polyline points="12 5 19 12 12 19"/>
@@ -315,13 +327,13 @@
             <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
           </svg>
         </div>
-        <h2 class="gameover-title">Oyun Bitti!</h2>
+        <h2 id="gameover-title" class="gameover-title">Oyun Bitti!</h2>
         <p id="gameover-winner-text" class="gameover-winner-banner">🏆 Kırmızı Takım Kazandı!</p>
       </div>
 
       <!-- Final Skor Tablosu -->
       <div class="panel gameover-scores-list">
-        <div class="panel-header-title">FİNAL SKORLARI</div>
+        <div id="lbl-final-scores" class="panel-header-title">FİNAL SKORLARI</div>
         <div id="gameover-scores" class="gameover-scores-list">
           <!-- JS dolduracak -->
         </div>
@@ -332,13 +344,13 @@
           <polyline points="1 4 1 10 7 10"/>
           <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
         </svg>
-        <span>Yeni Oyun Başlat</span>
+        <span id="btn-restart-text">Yeni Oyun Başlat</span>
       </button>
     </div>
 
   </div>
 
-  <script src="cards.js"></script>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

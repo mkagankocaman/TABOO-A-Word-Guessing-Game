@@ -119,14 +119,32 @@ class SoundFX {
 const soundFX = new SoundFX();
 
 // ==========================================================================
+// 🌍 YERELLEŞTİRME & DİL YÖNETİMİ (i18n)
+// ==========================================================================
+function detectInitialLanguage() {
+  const saved = localStorage.getItem('taboo_language');
+  if (saved === 'tr' || saved === 'en') return saved;
+  const browserLang = (navigator.language || navigator.userLanguage || 'tr').toLowerCase();
+  return browserLang.startsWith('tr') ? 'tr' : 'en';
+}
+
+function t(key, ...args) {
+  const lang = gameState.currentLanguage || 'tr';
+  const dict = TRANSLATIONS[lang] || TRANSLATIONS.tr;
+  const entry = dict[key] !== undefined ? dict[key] : (TRANSLATIONS.tr[key] || key);
+  return typeof entry === 'function' ? entry(...args) : entry;
+}
+
+// ==========================================================================
 // 📦 KALICI KART HAVUZU & OYUN DURUMU (STORAGE & STATE)
 // ==========================================================================
 const STORAGE_KEYS = {
   SETTINGS: 'taboo_game_settings',
-  PLAYED_CARDS: 'taboo_played_card_ids'
+  PLAYED_CARDS_PREFIX: 'taboo_played_card_ids_'
 };
 
 const gameState = {
+  currentLanguage: 'tr',
   teams: [
     { name: "Kırmızı Takım", score: 0 },
     { name: "Mavi Takım", score: 0 }
@@ -139,6 +157,7 @@ const gameState = {
   currentRound: 1,
   
   // Deste Yönetimi
+  rawCards: [],
   availableCards: [],
   playedCardIds: new Set(),
   currentCard: null,
@@ -174,9 +193,9 @@ const screens = {
 };
 
 // ==========================================================================
-// 🚀 UYGULAMA BAŞLANGICI VE ETKİLEŞİM TANIMLAMALARI
+// 🚀 UYGULAMA BAŞLANGICI
 // ==========================================================================
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   // Safari / Mobil Ses Kilidi Açma (İlk Dokunuşta Sessiz Resume)
   const unlockAudio = () => {
     soundFX.init();
@@ -192,8 +211,15 @@ window.addEventListener("DOMContentLoaded", () => {
     if (e.touches.length > 1) e.preventDefault();
   }, { passive: false });
 
+  // Otomatik Dil Tespiti
+  gameState.currentLanguage = detectInitialLanguage();
+  initLanguageSwitcher();
   loadSavedSettings();
-  initDeckPool();
+  applyLanguageUI();
+
+  // Seçili dilin kartlarını tembel/dinamik yükle (Lazy Loading)
+  await loadAndInitDeck(gameState.currentLanguage, false);
+
   initSetupScreen();
   
   const timerBorder = document.getElementById("timer-border");
@@ -218,29 +244,58 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================================================
-// 🃏 DESTE VE KART YÖNETİMİ (PERSISTENT DECK POOL)
+// 🃏 DİNAMİK KART YÜKLEYİCİ (ON-DEMAND LAZY LOADER)
 // ==========================================================================
+function loadCardDeckFile(lang) {
+  return new Promise((resolve, reject) => {
+    const oldScript = document.getElementById('dynamic-cards-script');
+    if (oldScript) oldScript.remove();
+
+    const script = document.createElement('script');
+    script.id = 'dynamic-cards-script';
+    script.src = lang === 'en' ? 'cards_en.js' : 'cards_tr.js';
+    
+    script.onload = () => {
+      gameState.rawCards = window.TABOO_CARDS || [];
+      resolve(gameState.rawCards);
+    };
+    script.onerror = () => {
+      console.error("Kart dosyası yüklenemedi:", script.src);
+      // Fallback to empty
+      gameState.rawCards = [];
+      resolve([]);
+    };
+    document.body.appendChild(script);
+  });
+}
+
+async function loadAndInitDeck(lang, forceReset = false) {
+  await loadCardDeckFile(lang);
+  initDeckPool(forceReset);
+}
+
 function initDeckPool(forceReset = false) {
+  const storageKey = STORAGE_KEYS.PLAYED_CARDS_PREFIX + gameState.currentLanguage;
   try {
     if (forceReset) {
-      localStorage.removeItem(STORAGE_KEYS.PLAYED_CARDS);
+      localStorage.removeItem(storageKey);
       gameState.playedCardIds = new Set();
     } else {
-      const saved = localStorage.getItem(STORAGE_KEYS.PLAYED_CARDS);
+      const saved = localStorage.getItem(storageKey);
       gameState.playedCardIds = saved ? new Set(JSON.parse(saved)) : new Set();
     }
   } catch (e) {
     gameState.playedCardIds = new Set();
   }
 
-  // Oynanmamış kartları filtrele
-  let pool = ALL_CARDS.filter(c => !gameState.playedCardIds.has(c.id));
+  const all = gameState.rawCards || [];
+  let pool = all.filter(c => !gameState.playedCardIds.has(c.id));
 
   // Eğer tüm kartlar bittiyse desteyi otomatik sıfırla
-  if (pool.length === 0) {
+  if (pool.length === 0 && all.length > 0) {
     gameState.playedCardIds.clear();
-    localStorage.removeItem(STORAGE_KEYS.PLAYED_CARDS);
-    pool = [...ALL_CARDS];
+    localStorage.removeItem(storageKey);
+    pool = [...all];
   }
 
   // Fisher-Yates Karıştırma
@@ -256,8 +311,9 @@ function initDeckPool(forceReset = false) {
 function markCardAsPlayed(card) {
   if (!card || !card.id) return;
   gameState.playedCardIds.add(card.id);
+  const storageKey = STORAGE_KEYS.PLAYED_CARDS_PREFIX + gameState.currentLanguage;
   try {
-    localStorage.setItem(STORAGE_KEYS.PLAYED_CARDS, JSON.stringify([...gameState.playedCardIds]));
+    localStorage.setItem(storageKey, JSON.stringify([...gameState.playedCardIds]));
   } catch (e) {}
   updateDeckUI();
 }
@@ -265,8 +321,9 @@ function markCardAsPlayed(card) {
 function unmarkCardAsPlayed(card) {
   if (!card || !card.id) return;
   gameState.playedCardIds.delete(card.id);
+  const storageKey = STORAGE_KEYS.PLAYED_CARDS_PREFIX + gameState.currentLanguage;
   try {
-    localStorage.setItem(STORAGE_KEYS.PLAYED_CARDS, JSON.stringify([...gameState.playedCardIds]));
+    localStorage.setItem(storageKey, JSON.stringify([...gameState.playedCardIds]));
   } catch (e) {}
   updateDeckUI();
 }
@@ -274,8 +331,107 @@ function unmarkCardAsPlayed(card) {
 function updateDeckUI() {
   const el = document.getElementById("deck-remaining-count");
   if (el) {
-    el.textContent = gameState.availableCards ? gameState.availableCards.length : ALL_CARDS.length;
+    el.textContent = gameState.availableCards ? gameState.availableCards.length : (gameState.rawCards ? gameState.rawCards.length : 0);
   }
+}
+
+// ==========================================================================
+// 🌐 DİL DEĞİŞTİRME & ARAYÜZ YENİLEME
+// ==========================================================================
+function initLanguageSwitcher() {
+  const btnTr = document.getElementById("btn-lang-tr");
+  const btnEn = document.getElementById("btn-lang-en");
+
+  btnTr.addEventListener("click", () => switchLanguage('tr'));
+  btnEn.addEventListener("click", () => switchLanguage('en'));
+}
+
+async function switchLanguage(lang) {
+  if (gameState.currentLanguage === lang) return;
+  
+  soundFX.init();
+  gameState.currentLanguage = lang;
+  localStorage.setItem('taboo_language', lang);
+
+  applyLanguageUI();
+  await loadAndInitDeck(lang, false);
+}
+
+function applyLanguageUI() {
+  const isTr = gameState.currentLanguage === 'tr';
+
+  // Buton aktiflik durumu
+  document.getElementById("btn-lang-tr").classList.toggle("active", isTr);
+  document.getElementById("btn-lang-en").classList.toggle("active", !isTr);
+
+  // Başlıklar & Etiketler
+  document.getElementById("splash-title").textContent = t('appTitle');
+  document.getElementById("app-title-logo").textContent = t('appTitle');
+  document.getElementById("lbl-game-settings").textContent = t('gameSettings');
+  document.getElementById("lbl-team1").textContent = t('team1Label');
+  document.getElementById("lbl-team2").textContent = t('team2Label');
+  document.getElementById("lbl-turn-time").textContent = t('turnDurationLabel');
+  document.getElementById("lbl-total-rounds").textContent = t('totalRoundsLabel');
+  document.getElementById("lbl-tabu-penalty").textContent = t('tabuPenaltyLabel');
+  document.getElementById("lbl-pass-limit").textContent = t('passLimitLabel');
+  document.getElementById("lbl-remaining-cards").textContent = t('remainingCards') + ":";
+  document.getElementById("btn-reset-deck").textContent = t('resetDeckBtn');
+  document.getElementById("btn-start-game-text").textContent = t('startGameBtn');
+
+  // Slider Değer Göstergeleri
+  const inputTime = document.getElementById("input-time");
+  const inputRounds = document.getElementById("input-rounds");
+  const inputTabuPenalty = document.getElementById("input-tabu-penalty");
+  const inputPassLimit = document.getElementById("input-pass-limit");
+
+  document.getElementById("time-val").textContent = `${inputTime.value} ${t('secondsUnit')}`;
+  document.getElementById("rounds-val").textContent = `${inputRounds.value} ${t('roundsUnit')}`;
+  document.getElementById("tabu-penalty-val").textContent = `-${inputTabuPenalty.value} ${t('penaltyUnit')}`;
+  document.getElementById("pass-limit-val").textContent = `${inputPassLimit.value} ${t('passUnit')}`;
+
+  // Varsayılan takım isimlerini dile göre güncelle (Eğer kullanıcı özel isim yazmadıysa)
+  const t1Input = document.getElementById("team1-name");
+  const t2Input = document.getElementById("team2-name");
+  t1Input.placeholder = t('team1Default');
+  t2Input.placeholder = t('team2Default');
+
+  if (!t1Input.value || t1Input.value === "Kırmızı Takım" || t1Input.value === "Red Team") {
+    t1Input.value = t('team1Default');
+  }
+  if (!t2Input.value || t2Input.value === "Mavi Takım" || t2Input.value === "Blue Team") {
+    t2Input.value = t('team2Default');
+  }
+
+  // Hazırlık & Oyun İçi
+  document.getElementById("ready-subtitle").textContent = t('readySubtitle');
+  document.getElementById("btn-start-turn-text").textContent = t('startTurnBtn');
+
+  document.getElementById("pause-title").textContent = t('pauseTitle');
+  document.getElementById("pause-subtitle").textContent = t('pauseSubtitle');
+  document.getElementById("btn-resume-text").textContent = t('resumeBtn');
+  document.getElementById("btn-main-menu-text").textContent = t('mainMenuBtn');
+  document.getElementById("btn-undo-text").textContent = t('undoBtn');
+  document.getElementById("btn-undo").title = t('undoTitle');
+
+  document.getElementById("lbl-stat-correct").textContent = t('statCorrect');
+  document.getElementById("lbl-stat-tabu").textContent = t('statTabu');
+  document.getElementById("lbl-stat-pass").textContent = t('statPass');
+
+  document.getElementById("label-tabu-btn").textContent = t('tabuBtn', gameState.tabuPenalty);
+  document.getElementById("label-pass-btn").textContent = t('passBtn', gameState.turnPassesLeft);
+  document.getElementById("label-correct-btn").textContent = t('correctBtn');
+
+  // Tur Özeti
+  document.getElementById("summary-title").textContent = t('summaryTitle');
+  document.getElementById("summary-net-label").textContent = t('summaryNetLabel');
+  document.getElementById("summary-history-title").textContent = t('playedWordsTitle');
+  document.getElementById("summary-hint-text").textContent = t('reviewHint');
+  document.getElementById("btn-next-turn-text").textContent = t('nextTurnBtn');
+
+  // Oyun Bitti
+  document.getElementById("gameover-title").textContent = t('gameOverTitle');
+  document.getElementById("lbl-final-scores").textContent = t('finalScoresTitle');
+  document.getElementById("btn-restart-text").textContent = t('newGameBtn');
 }
 
 // ==========================================================================
@@ -287,23 +443,38 @@ function loadSavedSettings() {
     if (!saved) return;
     const s = JSON.parse(saved);
 
-    if (s.team1) document.getElementById("team1-name").value = s.team1;
-    if (s.team2) document.getElementById("team2-name").value = s.team2;
+    const t1Input = document.getElementById("team1-name");
+    const t2Input = document.getElementById("team2-name");
+
+    if (s.team1) {
+      if (s.team1 === "Kırmızı Takım" || s.team1 === "Red Team") {
+        t1Input.value = t('team1Default');
+      } else {
+        t1Input.value = s.team1;
+      }
+    }
+    if (s.team2) {
+      if (s.team2 === "Mavi Takım" || s.team2 === "Blue Team") {
+        t2Input.value = t('team2Default');
+      } else {
+        t2Input.value = s.team2;
+      }
+    }
     if (s.time) {
       document.getElementById("input-time").value = s.time;
-      document.getElementById("time-val").textContent = `${s.time} saniye`;
+      document.getElementById("time-val").textContent = `${s.time} ${t('secondsUnit')}`;
     }
     if (s.rounds) {
       document.getElementById("input-rounds").value = s.rounds;
-      document.getElementById("rounds-val").textContent = `${s.rounds} Tur`;
+      document.getElementById("rounds-val").textContent = `${s.rounds} ${t('roundsUnit')}`;
     }
     if (s.tabuPenalty) {
       document.getElementById("input-tabu-penalty").value = s.tabuPenalty;
-      document.getElementById("tabu-penalty-val").textContent = `-${s.tabuPenalty} Puan`;
+      document.getElementById("tabu-penalty-val").textContent = `-${s.tabuPenalty} ${t('penaltyUnit')}`;
     }
     if (s.passLimit !== undefined) {
       document.getElementById("input-pass-limit").value = s.passLimit;
-      document.getElementById("pass-limit-val").textContent = `${s.passLimit} Pas`;
+      document.getElementById("pass-limit-val").textContent = `${s.passLimit} ${t('passUnit')}`;
     }
   } catch (e) {}
 }
@@ -346,23 +517,23 @@ function initSetupScreen() {
   const passLimitVal = document.getElementById("pass-limit-val");
   const btnResetDeck = document.getElementById("btn-reset-deck");
 
-  inputTime.addEventListener("input", (e) => timeVal.textContent = `${e.target.value} saniye`);
-  inputRounds.addEventListener("input", (e) => roundsVal.textContent = `${e.target.value} Tur`);
-  inputTabuPenalty.addEventListener("input", (e) => tabuPenaltyVal.textContent = `-${e.target.value} Puan`);
-  inputPassLimit.addEventListener("input", (e) => passLimitVal.textContent = `${e.target.value} Pas`);
+  inputTime.addEventListener("input", (e) => timeVal.textContent = `${e.target.value} ${t('secondsUnit')}`);
+  inputRounds.addEventListener("input", (e) => roundsVal.textContent = `${e.target.value} ${t('roundsUnit')}`);
+  inputTabuPenalty.addEventListener("input", (e) => tabuPenaltyVal.textContent = `-${e.target.value} ${t('penaltyUnit')}`);
+  inputPassLimit.addEventListener("input", (e) => passLimitVal.textContent = `${e.target.value} ${t('passUnit')}`);
 
   btnResetDeck.addEventListener("click", () => {
     initDeckPool(true);
-    btnResetDeck.textContent = "Sıfırlandı!";
-    setTimeout(() => btnResetDeck.textContent = "Desteyi Yenile", 1200);
+    btnResetDeck.textContent = t('deckResetSuccess');
+    setTimeout(() => btnResetDeck.textContent = t('resetDeckBtn'), 1200);
   });
 
   document.getElementById("btn-start-game").addEventListener("click", () => {
     soundFX.init();
     saveCurrentSettings();
 
-    const team1 = document.getElementById("team1-name").value.trim() || "Kırmızı Takım";
-    const team2 = document.getElementById("team2-name").value.trim() || "Mavi Takım";
+    const team1 = document.getElementById("team1-name").value.trim() || t('team1Default');
+    const team2 = document.getElementById("team2-name").value.trim() || t('team2Default');
 
     gameState.teams[0].name = team1;
     gameState.teams[0].score = 0;
@@ -392,7 +563,7 @@ function initSetupScreen() {
 function prepareReadyScreen() {
   const activeTeam = gameState.teams[gameState.currentTeamIndex];
 
-  document.getElementById("ready-round-badge").textContent = `Tur ${gameState.currentRound} / ${gameState.totalRounds}`;
+  document.getElementById("ready-round-badge").textContent = t('roundBadge', gameState.currentRound, gameState.totalRounds);
   
   const readyTeamName = document.getElementById("ready-team-name");
   readyTeamName.textContent = activeTeam.name;
@@ -414,7 +585,7 @@ function runCountdown(callback) {
   const teamTitle = document.getElementById("countdown-team-title");
 
   const activeTeam = gameState.teams[gameState.currentTeamIndex];
-  teamTitle.textContent = `${activeTeam.name} Hazırlan!`;
+  teamTitle.textContent = t('getReadyTitle', activeTeam.name);
   
   overlay.classList.remove("hidden");
   
@@ -446,7 +617,7 @@ function runCountdown(callback) {
     if (count > 0) {
       updateDisplay(count);
     } else if (count === 0) {
-      updateDisplay("BAŞLA!", true);
+      updateDisplay(t('countdownStart'), true);
     } else {
       clearInterval(interval);
       overlay.classList.add("hidden");
@@ -505,7 +676,7 @@ function startTurn() {
   const activeTeam = gameState.teams[gameState.currentTeamIndex];
   document.getElementById("play-team-name").textContent = activeTeam.name;
   document.getElementById("play-team-badge").style.background = gameState.currentTeamIndex === 0 ? '#ef4444' : '#3b82f6';
-  document.getElementById("label-tabu-btn").textContent = `TABU (-${gameState.tabuPenalty})`;
+  document.getElementById("label-tabu-btn").textContent = t('tabuBtn', gameState.tabuPenalty);
 
   updateUndoButtonUI();
   updateTurnStatsUI();
@@ -658,12 +829,14 @@ function renderCard(card) {
   const forbiddenContainer = document.getElementById("card-forbidden");
   forbiddenContainer.innerHTML = "";
 
-  card.yasakli_kelimeler.forEach(word => {
-    const item = document.createElement("div");
-    item.className = "forbidden-word-item";
-    item.textContent = word;
-    forbiddenContainer.appendChild(item);
-  });
+  if (card.yasakli_kelimeler && Array.isArray(card.yasakli_kelimeler)) {
+    card.yasakli_kelimeler.forEach(word => {
+      const item = document.createElement("div");
+      item.className = "forbidden-word-item";
+      item.textContent = word;
+      forbiddenContainer.appendChild(item);
+    });
+  }
 }
 
 // ==========================================================================
@@ -792,11 +965,10 @@ function updateTurnStatsUI() {
   document.getElementById("stat-pass").textContent = gameState.turnPassesLeft;
 
   const btnPass = document.getElementById("btn-pass");
-  document.getElementById("label-pass-btn").textContent = `PAS (${gameState.turnPassesLeft})`;
+  document.getElementById("label-pass-btn").textContent = t('passBtn', gameState.turnPassesLeft);
   btnPass.disabled = gameState.turnPassesLeft <= 0;
 }
 
-// ==========================================================================
 // ==========================================================================
 // 📊 TUR BİTİŞİ VE İNTERAKTİF ÖZET EKRANI (ROUND REVIEW UI)
 // ==========================================================================
@@ -811,7 +983,7 @@ function endTurn() {
   gameState.turnInitialTeamScore = gameState.teams[gameState.currentTeamIndex].score;
 
   const activeTeam = gameState.teams[gameState.currentTeamIndex];
-  document.getElementById("summary-team-title").textContent = `${activeTeam.name} Sonuçları`;
+  document.getElementById("summary-team-title").textContent = t('summaryTeamSubtitle', activeTeam.name);
   
   renderSummaryHistoryList();
   recalculateSummaryScore(false);
@@ -844,7 +1016,7 @@ function renderSummaryHistoryList() {
   if (gameState.turnHistory.length === 0) {
     const emptyMsg = document.createElement("p");
     emptyMsg.className = "history-empty-msg";
-    emptyMsg.textContent = "Bu turda kelime oynanmadı.";
+    emptyMsg.textContent = t('noWordsPlayed');
     historyContainer.appendChild(emptyMsg);
     return;
   }
@@ -860,7 +1032,7 @@ function renderSummaryHistoryList() {
     // Kelime & Akordeon Başlığı (Chevron ile)
     const toggleArea = document.createElement("div");
     toggleArea.className = "history-word-toggle";
-    toggleArea.title = "Yasaklı kelimeleri görmek için tıklayın";
+    toggleArea.title = t('reviewHint');
 
     toggleArea.innerHTML = `
       <svg class="history-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -879,15 +1051,15 @@ function renderSummaryHistoryList() {
 
     const btnCorrect = document.createElement("button");
     btnCorrect.className = `review-btn review-btn-correct ${item.type === 'correct' ? 'active-correct' : ''}`;
-    btnCorrect.textContent = "+1 Doğru";
+    btnCorrect.textContent = t('reviewCorrect');
 
     const btnTabu = document.createElement("button");
     btnTabu.className = `review-btn review-btn-tabu ${item.type === 'tabu' ? 'active-tabu' : ''}`;
-    btnTabu.textContent = `-${gameState.tabuPenalty} Tabu`;
+    btnTabu.textContent = t('reviewTabu', gameState.tabuPenalty);
 
     const btnPass = document.createElement("button");
     btnPass.className = `review-btn review-btn-pass ${item.type === 'pass' ? 'active-pass' : ''}`;
-    btnPass.textContent = "0 Pas";
+    btnPass.textContent = t('reviewPass');
 
     const updateButtonVisuals = (newType) => {
       btnCorrect.classList.toggle("active-correct", newType === 'correct');
@@ -939,7 +1111,7 @@ function renderSummaryHistoryList() {
 
     const label = document.createElement("div");
     label.className = "accordion-label";
-    label.textContent = "YASAKLI KELİMELER";
+    label.textContent = t('forbiddenWordsLabel');
 
     const tagsGrid = document.createElement("div");
     tagsGrid.className = "accordion-tags-grid";
@@ -985,11 +1157,11 @@ function renderGameOverScreen() {
 
   let winnerText = "";
   if (t1.score > t2.score) {
-    winnerText = `🏆 ${t1.name} Kazandı!`;
+    winnerText = t('winnerBanner', t1.name);
   } else if (t2.score > t1.score) {
-    winnerText = `🏆 ${t2.name} Kazandı!`;
+    winnerText = t('winnerBanner', t2.name);
   } else {
-    winnerText = `🤝 Berabere Bitti!`;
+    winnerText = t('drawBanner');
   }
 
   document.getElementById("gameover-winner-text").textContent = winnerText;
@@ -1005,7 +1177,7 @@ function renderGameOverScreen() {
   name1.textContent = t1.name;
   const score1 = document.createElement("span");
   score1.className = "gameover-score-text";
-  score1.textContent = `${t1.score} Puan`;
+  score1.textContent = `${t1.score} ${t('pointsSuffix')}`;
   row1.appendChild(name1);
   row1.appendChild(score1);
 
@@ -1017,7 +1189,7 @@ function renderGameOverScreen() {
   name2.textContent = t2.name;
   const score2 = document.createElement("span");
   score2.className = "gameover-score-text";
-  score2.textContent = `${t2.score} Puan`;
+  score2.textContent = `${t2.score} ${t('pointsSuffix')}`;
   row2.appendChild(name2);
   row2.appendChild(score2);
 

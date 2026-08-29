@@ -14,12 +14,15 @@ Bu belge, Taboo kelime tahmin oyunu için gelecekte hayata geçirilmesi planlana
 
 ---
 
-## 🌍 Aşama 2: Çoklu Dil Desteği (i18n) ve İngilizce Deste
-* **Amaç:** Oyunu uluslararası hale getirmek ve İngilizce dil seçeneği sunmak.
-* **Detaylar:**
-  * UI metinleri için dil anahtarları (Türkçe / İngilizce).
-  * İngilizce için 500+ kelimelik ve 5'er yasaklı kelimeli yeni kart veritabanı (`cards_en.js` veya JSON formatı).
-  * Başlangıç / Ayarlar ekranına bayrak veya dil seçim menüsü eklenmesi.
+## ✅ Aşama 2: Çoklu Dil Desteği (i18n) ve İngilizce Deste [Tamamlandı]
+* **Amaç:** Oyunu uluslararası hale getirmek, İngilizce dil seçeneği sunmak ve modüler yerelleştirme sağlamak.
+* **Tamamlanan Özellikler:**
+  * Modüler arayüz sözlüğü (`i18n.js`) ile tüm UI metinlerinin bağımsız bir dosyada toplanması.
+  * 50 adet özenle hazırlanmış, zorlayıcı İngilizce Tabu kartı (`cards_en.js`).
+  * Cihaz ve tarayıcı diline göre otomatik dil tespiti (`navigator.language`).
+  * Dinamik / Tembel Kart Yükleme (Lazy Loading): Yalnızca seçili dilin kart dosyasının yüklenmesiyle sıfır gereksiz bellek/ağ tüketimi.
+  * Başlangıç/Ayarlar ekranında tek dokunuşla dil değiştirici (🇹🇷 Türkçe / 🇬🇧 English).
+  * Dile özel bağımsız deste hafızası (`taboo_played_card_ids_tr` ve `taboo_played_card_ids_en`).
 
 ---
 
