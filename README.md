@@ -17,7 +17,7 @@ A modern, fully customizable, web-based Taboo party game designed for game night
 
 ## 🚀 Key Features
 
-* **Multi-Language Support (i18n):** Full support for Turkish (585+ words) and English (50+ words) with instant lazy-loading and language-isolated deck persistence.
+* **Multi-Language Support (i18n):** Full support for Turkish (480+ high-quality curated words) and English (50+ words) with instant lazy-loading and language-isolated deck persistence.
 * **100% Offline & PWA Ready:** Standalone Progressive Web App with cache-first service worker precaching all assets and card decks. Installable on desktop & mobile home screens.
 * **Hybrid Audio-Haptic Feedback:**
   * Procedural Web Audio API sound synthesizer with zero external MP3 dependencies.
@@ -39,7 +39,7 @@ A modern, fully customizable, web-based Taboo party game designed for game night
 ├── scripts/
 │   └── delete_cards.py  # Automation tool to manage and re-index cards dataset
 ├── app.js               # Core game engine, audio synthesizer, haptics & wake lock
-├── cards_tr.js          # 585+ Turkish taboo cards dataset
+├── cards_tr.js          # 480+ Turkish taboo cards dataset
 ├── cards_en.js          # 50+ English taboo cards dataset
 ├── capacitor.config.json # Capacitor hybrid Android configuration
 ├── i18n.js              # Localization dictionary (TR & EN)
