@@ -6,8 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#020617">
   <meta name="msapplication-navbutton-color" content="#020617">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TABOO!">
+  
   <title>TABOO!</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -107,6 +114,26 @@
         <div class="deck-info-box">
           <span class="deck-info-text"><span id="lbl-remaining-cards">Kalan Kart:</span> <span id="deck-remaining-count" class="deck-info-count">585</span></span>
           <button id="btn-reset-deck" class="btn-reset-deck" title="Oynanmış kart geçmişini sıfırla">Desteyi Yenile</button>
+        </div>
+
+        <!-- 📲 PWA Kurulum Banner'ı (Destekleyen Cihazlarda Otomatik Görünür) -->
+        <div id="pwa-install-banner" class="pwa-install-banner hidden">
+          <div class="pwa-banner-content">
+            <div class="pwa-banner-icon">
+              <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </div>
+            <div class="pwa-banner-text-col">
+              <span id="pwa-install-title" class="pwa-install-title">Uygulamayı Cihazına Yükle</span>
+              <p id="pwa-install-desc" class="pwa-install-desc">Çevrimdışı ve tam ekran oyna</p>
+            </div>
+          </div>
+          <button id="btn-pwa-install" class="btn-pwa-install-action" type="button">
+            <span id="pwa-install-btn-text">Yükle</span>
+          </button>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 /**
- * TABOO WORD GAME - CORE APPLICATION LOGIC
+ * TABOO WORD GAME - CORE APPLICATION LOGIC (MOBILE & PWA ENHANCED)
  */
 
 // ==========================================================================
@@ -45,8 +45,29 @@ class SoundFX {
     } catch (e) {}
   }
 
+  // 10 - 4 saniye arası standart uyarı tıkı
   playCountdownTick() {
-    this.playTone(700, 'sine', 0.08, 0.12);
+    this.playTone(650, 'sine', 0.08, 0.14);
+  }
+
+  // Son 3 saniye acil durum hızlandırılmış yüksek tonlu nabız
+  playUrgentTick() {
+    if (!this.ctx) return;
+    this.playTone(920, 'sine', 0.06, 0.18);
+    setTimeout(() => {
+      this.playTone(1100, 'sine', 0.07, 0.2);
+    }, 45);
+  }
+
+  // Süre bittiğinde çalan kapanış zili/düdüğü
+  playTimeUpChime() {
+    if (!this.ctx) return;
+    const notes = [440.00, 330.00, 220.00];
+    notes.forEach((freq, idx) => {
+      setTimeout(() => {
+        this.playTone(freq, 'sawtooth', 0.22, 0.18);
+      }, idx * 70);
+    });
   }
 
   playStartChime() {
@@ -119,6 +140,85 @@ class SoundFX {
 const soundFX = new SoundFX();
 
 // ==========================================================================
+// 📳 HİBRİT HAPTİC TİTREŞİM MOTORU (WEB VIBRATE + CAPACITOR HAPTICS)
+// ==========================================================================
+const HapticManager = {
+  async trigger(patternType) {
+    // 1. Capacitor Native Haptics
+    const Haptics = window.Capacitor?.Plugins?.Haptics;
+    if (Haptics) {
+      try {
+        if (patternType === 'correct') await Haptics.notification({ type: 'SUCCESS' });
+        else if (patternType === 'tabu') await Haptics.notification({ type: 'ERROR' });
+        else if (patternType === 'pass') await Haptics.impact({ style: 'MEDIUM' });
+        else if (patternType === 'undo') await Haptics.impact({ style: 'LIGHT' });
+        else if (patternType === 'warning') await Haptics.impact({ style: 'HEAVY' });
+        else if (patternType === 'timeup') await Haptics.notification({ type: 'WARNING' });
+        return;
+      } catch (e) {}
+    }
+
+    // 2. Web API (navigator.vibrate) Fallback
+    if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
+      try {
+        const patterns = {
+          correct: [40, 60, 80],
+          tabu: [120, 60, 180],
+          pass: 35,
+          undo: [25, 40, 25],
+          warning: 65,
+          timeup: 160
+        };
+        navigator.vibrate(patterns[patternType] || 40);
+      } catch (e) {}
+    }
+  }
+};
+
+// ==========================================================================
+// 💡 EKRAN AÇIK TUTMA (SCREEN WAKE LOCK API)
+// ==========================================================================
+let wakeLockSentinel = null;
+
+async function requestWakeLock() {
+  if ('wakeLock' in navigator && typeof navigator.wakeLock.request === 'function') {
+    try {
+      if (!wakeLockSentinel || wakeLockSentinel.released) {
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        wakeLockSentinel.addEventListener('release', () => {
+          wakeLockSentinel = null;
+        });
+      }
+    } catch (e) {
+      // Düşük güç modu vb. durumlarda sessizce geç
+    }
+  }
+}
+
+async function releaseWakeLock() {
+  if (wakeLockSentinel) {
+    try {
+      await wakeLockSentinel.release();
+    } catch (e) {}
+    wakeLockSentinel = null;
+  }
+}
+
+// Sekme arka plana geçtiğinde oyunu otomatik duraklat, geri gelince wake lock'u tazele
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible') {
+    if (gameState.currentScreen === 'play' && !gameState.isPaused) {
+      await requestWakeLock();
+    }
+  } else {
+    if (gameState.currentScreen === 'play' && !gameState.isPaused) {
+      pauseGameManually();
+    }
+    await releaseWakeLock();
+  }
+});
+
+// ==========================================================================
 // 🌍 YERELLEŞTİRME & DİL YÖNETİMİ (i18n)
 // ==========================================================================
 function detectInitialLanguage() {
@@ -145,6 +245,7 @@ const STORAGE_KEYS = {
 
 const gameState = {
   currentLanguage: 'tr',
+  currentScreen: 'setup',
   teams: [
     { name: "Kırmızı Takım", score: 0 },
     { name: "Mavi Takım", score: 0 }
@@ -168,6 +269,7 @@ const gameState = {
   turnHistory: [],
   lastAction: null,
   timeLeft: 60,
+  lastTickedSecond: null,
   turnEndTime: 0,
   turnInitialTeamScore: 0,
   timerInterval: null,
@@ -193,8 +295,10 @@ const screens = {
 };
 
 // ==========================================================================
-// 🚀 UYGULAMA BAŞLANGICI
+// 🚀 UYGULAMA BAŞLANGICI & SERVICE WORKER
 // ==========================================================================
+let deferredPWAInstallPrompt = null;
+
 window.addEventListener("DOMContentLoaded", async () => {
   // Safari / Mobil Ses Kilidi Açma (İlk Dokunuşta Sessiz Resume)
   const unlockAudio = () => {
@@ -210,6 +314,21 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener('touchmove', (e) => {
     if (e.touches.length > 1) e.preventDefault();
   }, { passive: false });
+
+  // Service Worker Kaydı (PWA Çevrimdışı Desteği)
+  if ('serviceWorker' in navigator) {
+    try {
+      await navigator.serviceWorker.register('sw.js');
+    } catch (err) {
+      console.warn('Service Worker kaydı başarısız:', err);
+    }
+  }
+
+  // PWA Kurulum Olayı Dinleyicisi
+  initPWAInstallBanner();
+
+  // Donanım Geri Tuşu Yönetimi (Android & Browser History)
+  initNavigationManager();
 
   // Otomatik Dil Tespiti
   gameState.currentLanguage = detectInitialLanguage();
@@ -244,6 +363,91 @@ window.addEventListener("DOMContentLoaded", async () => {
 });
 
 // ==========================================================================
+// 📲 PWA INSTALL BANNER YÖNETİMİ
+// ==========================================================================
+function initPWAInstallBanner() {
+  const banner = document.getElementById("pwa-install-banner");
+  const btnInstall = document.getElementById("btn-pwa-install");
+
+  // Eğer zaten standalone / kurulu ise banner'ı gösterme
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isStandalone) {
+    if (banner) banner.classList.add("hidden");
+    return;
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPWAInstallPrompt = e;
+    if (banner && gameState.currentScreen === 'setup') {
+      banner.classList.remove("hidden");
+    }
+  });
+
+  if (btnInstall) {
+    btnInstall.addEventListener('click', async () => {
+      if (!deferredPWAInstallPrompt) return;
+      deferredPWAInstallPrompt.prompt();
+      const choice = await deferredPWAInstallPrompt.userChoice;
+      if (choice && choice.outcome === 'accepted') {
+        if (banner) banner.classList.add("hidden");
+      }
+      deferredPWAInstallPrompt = null;
+    });
+  }
+
+  window.addEventListener('appinstalled', () => {
+    if (banner) banner.classList.add("hidden");
+    deferredPWAInstallPrompt = null;
+  });
+}
+
+// ==========================================================================
+// 🔙 DONANIMSAL GERİ TUŞU & GEÇMİŞ (NAVIGATION & POPSTATE)
+// ==========================================================================
+function initNavigationManager() {
+  // Sayfa geçmişine ilk state'i yaz
+  window.history.replaceState({ screen: 'setup' }, '');
+
+  window.addEventListener('popstate', (event) => {
+    handleAppBackNavigation(event);
+  });
+
+  // Capacitor Android Geri Tuşu Eklentisi
+  if (window.Capacitor?.Plugins?.App) {
+    window.Capacitor.Plugins.App.addListener('backButton', () => {
+      handleAppBackNavigation();
+    });
+  }
+}
+
+function handleAppBackNavigation() {
+  if (gameState.currentScreen === 'play') {
+    if (!gameState.isPaused) {
+      pauseGameManually();
+      window.history.pushState({ screen: 'play' }, '');
+    } else {
+      if (confirm(t('exitConfirm'))) {
+        resetActiveTurnState();
+        releaseWakeLock();
+        updateDeckUI();
+        showScreen('setup');
+      } else {
+        window.history.pushState({ screen: 'play' }, '');
+      }
+    }
+  } else if (gameState.currentScreen === 'ready' || gameState.currentScreen === 'summary' || gameState.currentScreen === 'gameover') {
+    resetActiveTurnState();
+    releaseWakeLock();
+    showScreen('setup');
+  } else if (gameState.currentScreen === 'setup') {
+    if (window.Capacitor?.Plugins?.App) {
+      window.Capacitor.Plugins.App.exitApp();
+    }
+  }
+}
+
+// ==========================================================================
 // 🃏 DİNAMİK KART YÜKLEYİCİ (ON-DEMAND LAZY LOADER)
 // ==========================================================================
 function loadCardDeckFile(lang) {
@@ -261,7 +465,6 @@ function loadCardDeckFile(lang) {
     };
     script.onerror = () => {
       console.error("Kart dosyası yüklenemedi:", script.src);
-      // Fallback to empty
       gameState.rawCards = [];
       resolve([]);
     };
@@ -350,6 +553,7 @@ async function switchLanguage(lang) {
   if (gameState.currentLanguage === lang) return;
   
   soundFX.init();
+  HapticManager.trigger('pass');
   gameState.currentLanguage = lang;
   localStorage.setItem('taboo_language', lang);
 
@@ -378,6 +582,14 @@ function applyLanguageUI() {
   document.getElementById("btn-reset-deck").textContent = t('resetDeckBtn');
   document.getElementById("btn-start-game-text").textContent = t('startGameBtn');
 
+  // PWA Install Banner
+  const pwaTitle = document.getElementById("pwa-install-title");
+  const pwaDesc = document.getElementById("pwa-install-desc");
+  const pwaBtnText = document.getElementById("pwa-install-btn-text");
+  if (pwaTitle) pwaTitle.textContent = t('pwaInstallTitle');
+  if (pwaDesc) pwaDesc.textContent = t('pwaInstallDesc');
+  if (pwaBtnText) pwaBtnText.textContent = t('pwaInstallBtn');
+
   // Slider Değer Göstergeleri
   const inputTime = document.getElementById("input-time");
   const inputRounds = document.getElementById("input-rounds");
@@ -389,7 +601,7 @@ function applyLanguageUI() {
   document.getElementById("tabu-penalty-val").textContent = `-${inputTabuPenalty.value} ${t('penaltyUnit')}`;
   document.getElementById("pass-limit-val").textContent = `${inputPassLimit.value} ${t('passUnit')}`;
 
-  // Varsayılan takım isimlerini dile göre güncelle (Eğer kullanıcı özel isim yazmadıysa)
+  // Varsayılan takım isimlerini güncelle
   const t1Input = document.getElementById("team1-name");
   const t2Input = document.getElementById("team2-name");
   t1Input.placeholder = t('team1Default');
@@ -494,6 +706,13 @@ function saveCurrentSettings() {
 }
 
 function showScreen(screenName) {
+  gameState.currentScreen = screenName;
+  
+  // History state güncelle (Geri tuşu takibi için)
+  try {
+    window.history.pushState({ screen: screenName }, '');
+  } catch (e) {}
+
   Object.keys(screens).forEach(key => {
     if (key === screenName) {
       screens[key].classList.remove("hidden");
@@ -504,6 +723,16 @@ function showScreen(screenName) {
       screens[key].classList.add("hidden");
     }
   });
+
+  // PWA banner görünürlük kontrolü
+  const pwaBanner = document.getElementById("pwa-install-banner");
+  if (pwaBanner && deferredPWAInstallPrompt) {
+    if (screenName === 'setup') {
+      pwaBanner.classList.remove("hidden");
+    } else {
+      pwaBanner.classList.add("hidden");
+    }
+  }
 }
 
 function initSetupScreen() {
@@ -524,12 +753,14 @@ function initSetupScreen() {
 
   btnResetDeck.addEventListener("click", () => {
     initDeckPool(true);
+    HapticManager.trigger('pass');
     btnResetDeck.textContent = t('deckResetSuccess');
     setTimeout(() => btnResetDeck.textContent = t('resetDeckBtn'), 1200);
   });
 
   document.getElementById("btn-start-game").addEventListener("click", () => {
     soundFX.init();
+    HapticManager.trigger('pass');
     saveCurrentSettings();
 
     const team1 = document.getElementById("team1-name").value.trim() || t('team1Default');
@@ -601,11 +832,13 @@ function runCountdown(callback) {
       numberEl.style.color = "#34d399";
       numberEl.style.textShadow = "0 10px 30px rgba(52,211,153,0.4)";
       soundFX.playStartChime();
+      HapticManager.trigger('correct');
     } else {
       numberEl.style.fontSize = "clamp(80px, 22vw, 110px)";
       numberEl.style.color = "#f59e0b";
       numberEl.style.textShadow = "0 10px 30px rgba(251,191,36,0.4)";
       soundFX.playCountdownTick();
+      HapticManager.trigger('warning');
     }
     numberEl.classList.add("animate-pop");
   }
@@ -657,6 +890,7 @@ function resetActiveTurnState() {
   gameState.turnStats = { correct: 0, tabu: 0 };
   gameState.turnHistory = [];
   gameState.lastAction = null;
+  gameState.lastTickedSecond = null;
   
   const pauseOverlay = document.getElementById("pause-overlay");
   if (pauseOverlay) pauseOverlay.classList.add("hidden");
@@ -672,6 +906,7 @@ function startTurn() {
 
   gameState.turnPassesLeft = gameState.passLimit;
   gameState.timeLeft = gameState.turnDuration;
+  gameState.lastTickedSecond = gameState.timeLeft;
 
   const activeTeam = gameState.teams[gameState.currentTeamIndex];
   document.getElementById("play-team-name").textContent = activeTeam.name;
@@ -683,6 +918,9 @@ function startTurn() {
   updateTimerUI();
   nextCard();
   showScreen("play");
+  
+  // Ekranı açık tut (Wake Lock)
+  requestWakeLock();
   startTimer();
 }
 
@@ -699,15 +937,12 @@ function updateTimerUI() {
     const offset = gameState.timerPathLength * (1 - progress);
     timerBorder.style.strokeDashoffset = offset;
 
+    // Son 10 saniye uyarı stili
     if (gameState.timeLeft <= 10 && gameState.timeLeft > 0 && !gameState.isPaused) {
       timerBorder.setAttribute("stroke", "#ef4444");
       timerEl.style.color = "#ef4444";
       timerIcon.style.color = "#ef4444";
       timerBox.classList.add("timer-warning");
-
-      if (gameState.timeLeft <= 3) {
-        soundFX.playCountdownTick();
-      }
     } else {
       timerBorder.setAttribute("stroke", "#facc15");
       timerEl.style.color = "#facc15";
@@ -720,6 +955,7 @@ function updateTimerUI() {
 function startTimer() {
   clearInterval(gameState.timerInterval);
   gameState.turnEndTime = Date.now() + (gameState.timeLeft * 1000);
+  gameState.lastTickedSecond = gameState.timeLeft;
   updateTimerUI();
 
   gameState.timerInterval = setInterval(() => {
@@ -729,13 +965,30 @@ function startTimer() {
       if (remaining !== gameState.timeLeft) {
         gameState.timeLeft = remaining;
         updateTimerUI();
+
+        // ⏰ Ses ve Titreşim Koreografisi
+        if (gameState.lastTickedSecond !== remaining) {
+          gameState.lastTickedSecond = remaining;
+
+          // 1) 10 - 4 saniye arası standart tık sesi
+          if (remaining <= 10 && remaining > 3) {
+            soundFX.playCountdownTick();
+          }
+          // 2) Son 3 saniye (3, 2, 1): Hızlandırılmış/yüksek ses + Senkronize Titreşim
+          else if (remaining <= 3 && remaining > 0) {
+            soundFX.playUrgentTick();
+            HapticManager.trigger('warning');
+          }
+        }
       }
 
       if (gameState.timeLeft <= 0) {
+        soundFX.playTimeUpChime();
+        HapticManager.trigger('timeup');
         endTurn();
       }
     }
-  }, 200);
+  }, 100);
 }
 
 // ==========================================================================
@@ -750,6 +1003,8 @@ function pauseGameManually() {
   gameState.isPaused = true;
   gameState.pauseReason = 'manual';
   clearInterval(gameState.timerInterval);
+  releaseWakeLock();
+  HapticManager.trigger('pass');
   pauseOverlay.classList.remove("hidden");
   document.getElementById("timer-box").classList.add("timer-paused-glow");
 }
@@ -759,6 +1014,8 @@ function resumeGame() {
   gameState.pauseReason = 'none';
   pauseOverlay.classList.add("hidden");
   document.getElementById("timer-box").classList.remove("timer-paused-glow");
+  HapticManager.trigger('pass');
+  requestWakeLock();
   startTimer();
 }
 
@@ -774,6 +1031,7 @@ btnResume.addEventListener("click", resumeGame);
 
 btnMainMenu.addEventListener("click", () => {
   resetActiveTurnState();
+  releaseWakeLock();
   updateDeckUI();
   showScreen("setup");
 });
@@ -784,6 +1042,7 @@ function resumeIfPausedByUndo() {
     gameState.isPaused = false;
     gameState.pauseReason = 'none';
     document.getElementById("timer-box").classList.remove("timer-paused-glow");
+    requestWakeLock();
     startTimer();
   }
 }
@@ -855,6 +1114,7 @@ document.getElementById("btn-undo").addEventListener("click", () => {
   if (!gameState.lastAction || gameState.isAnimating) return;
 
   soundFX.playUndo();
+  HapticManager.trigger('undo');
 
   const last = gameState.lastAction;
 
@@ -903,6 +1163,7 @@ document.getElementById("btn-correct").addEventListener("click", () => {
   if (gameState.isAnimating || (gameState.isPaused && gameState.pauseReason === 'manual')) return;
   resumeIfPausedByUndo();
   soundFX.playCorrect();
+  HapticManager.trigger('correct');
 
   const played = gameState.currentCard;
   markCardAsPlayed(played);
@@ -923,6 +1184,7 @@ document.getElementById("btn-tabu").addEventListener("click", () => {
   if (gameState.isAnimating || (gameState.isPaused && gameState.pauseReason === 'manual')) return;
   resumeIfPausedByUndo();
   soundFX.playTabu();
+  HapticManager.trigger('tabu');
 
   const played = gameState.currentCard;
   markCardAsPlayed(played);
@@ -943,6 +1205,7 @@ document.getElementById("btn-pass").addEventListener("click", () => {
   if (gameState.isAnimating || gameState.turnPassesLeft <= 0 || (gameState.isPaused && gameState.pauseReason === 'manual')) return;
   resumeIfPausedByUndo();
   soundFX.playPassWhoosh();
+  HapticManager.trigger('pass');
 
   const played = gameState.currentCard;
   markCardAsPlayed(played);
@@ -975,6 +1238,7 @@ function updateTurnStatsUI() {
 function endTurn() {
   clearInterval(gameState.timerInterval);
   clearAnimationTimeouts();
+  releaseWakeLock();
   
   pauseOverlay.classList.add("hidden");
   document.getElementById("timer-box").classList.remove("timer-paused-glow", "timer-warning");
@@ -1043,6 +1307,7 @@ function renderSummaryHistoryList() {
 
     toggleArea.addEventListener("click", () => {
       cardContainer.classList.toggle("expanded");
+      HapticManager.trigger('pass');
     });
 
     // 3'lü Review Buton Grubu
@@ -1072,6 +1337,7 @@ function renderSummaryHistoryList() {
       if (item.type !== 'correct') {
         item.type = 'correct';
         soundFX.playReviewToggle();
+        HapticManager.trigger('correct');
         updateButtonVisuals('correct');
         recalculateSummaryScore(true);
       }
@@ -1082,6 +1348,7 @@ function renderSummaryHistoryList() {
       if (item.type !== 'tabu') {
         item.type = 'tabu';
         soundFX.playReviewToggle();
+        HapticManager.trigger('tabu');
         updateButtonVisuals('tabu');
         recalculateSummaryScore(true);
       }
@@ -1092,6 +1359,7 @@ function renderSummaryHistoryList() {
       if (item.type !== 'pass') {
         item.type = 'pass';
         soundFX.playReviewToggle();
+        HapticManager.trigger('pass');
         updateButtonVisuals('pass');
         recalculateSummaryScore(true);
       }
@@ -1134,6 +1402,7 @@ function renderSummaryHistoryList() {
 }
 
 document.getElementById("btn-next-turn").addEventListener("click", () => {
+  HapticManager.trigger('pass');
   if (gameState.currentTeamIndex === 0) {
     gameState.currentTeamIndex = 1;
   } else {
@@ -1152,6 +1421,7 @@ document.getElementById("btn-next-turn").addEventListener("click", () => {
 // 🏆 OYUN BİTTİ VE FİNAL SKOR EKRANI
 // ==========================================================================
 function renderGameOverScreen() {
+  releaseWakeLock();
   const t1 = gameState.teams[0];
   const t2 = gameState.teams[1];
 
@@ -1201,6 +1471,8 @@ function renderGameOverScreen() {
 
 document.getElementById("btn-restart").addEventListener("click", () => {
   resetActiveTurnState();
+  releaseWakeLock();
+  HapticManager.trigger('pass');
   updateDeckUI();
   showScreen("setup");
 });

@@ -1,0 +1,26 @@
+{
+  "name": "TABOO! - Kelime Tahmin Oyunu",
+  "short_name": "TABOO!",
+  "description": "Arkadaşlarınızla ve ailenizle oynayabileceğiniz modern, çevrimdışı destekli Tabu kelime tahmin oyunu.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

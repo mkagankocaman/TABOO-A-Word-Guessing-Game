@@ -1,6 +1,6 @@
 # Taboo Word Game 🎲
 
-A modern, fully customizable, web-based Taboo party game designed for game nights. This digital adaptation of the classic word-guessing board game offers highly flexible game configurations and essential quality-of-life features that set it apart from traditional alternatives.
+A modern, fully customizable, web-based Taboo party game designed for game nights. This digital adaptation of the classic word-guessing board game offers highly flexible game configurations, multi-language support (Turkish & English), PWA offline capabilities, and essential quality-of-life features that set it apart from traditional alternatives.
 
 🚀 **<a href="https://tabutr.vercel.app" target="_blank" rel="noopener noreferrer">Live Demo</a>**
 
@@ -8,37 +8,47 @@ A modern, fully customizable, web-based Taboo party game designed for game night
 
 ## 📸 UI Flow & Gameplay
 
-- **Game Setup:** Configure team names, round times, and custom rules.
-- **Active Gameplay:** Clean interface displaying the current card, active points, and remaining passes.
-- **Pause Menu:** Ability to hide cards and pause the timer instantly to prevent cheating.
-- **Round Review:** Post-round breakdown displaying net points earned and played words.
+- **Game Setup:** Configure team names, round times, custom rules, and switch language (🇹🇷 / 🇬🇧).
+- **Active Gameplay:** Clean interface displaying the current card, active points, remaining passes, and countdown timer.
+- **Pause Menu & Safety:** Ability to hide cards and pause the timer instantly; hardware back-button protection against accidental navigation.
+- **Round Review:** Post-round interactive breakdown with 5-forbidden-word accordion and one-click score correction (Correct / Taboo / Pass).
 
 ---
 
 ## 🚀 Key Features
 
-* **Extensive Word Database:** Contains 500+ unique Turkish words, each featuring 5 strictly forbidden taboo words.
-* **The "Undo" Button (Unique Feature):** Accidentally clicked "Correct" instead of "Taboo"? Unlike most market alternatives, this game includes a rewind button to fix accidental clicks instantly without ruining the score or state.
-* **Highly Customizable Gameplay:** Fully adjust the game rules before you start:
-  * **Custom Team Names:** Personalize your team identity (e.g., Red Team vs Blue Team).
-  * **Turn Duration:** Set how many seconds each round lasts.
-  * **Total Rounds:** Decide the length of the entire game.
-  * **Taboo Penalty:** Adjust how many points are deducted for hitting a taboo word.
-  * **Skip (Pass) Limit:** Define how many times a team can pass per round.
-* **Game Management:** Pause and resume options that automatically hide current cards.
+* **Multi-Language Support (i18n):** Full support for Turkish (585+ words) and English (50+ words) with instant lazy-loading and language-isolated deck persistence.
+* **100% Offline & PWA Ready:** Standalone Progressive Web App with cache-first service worker precaching all assets and card decks. Installable on desktop & mobile home screens.
+* **Hybrid Audio-Haptic Feedback:**
+  * Procedural Web Audio API sound synthesizer with zero external MP3 dependencies.
+  * Distinct haptic vibration feedback for Correct, Taboo, Pass, and Undo.
+  * **Last 10 Seconds Alert:** Rhythmic warning tick from 10s down to 4s.
+  * **Last 3 Seconds Sprint:** Accelerated high-pitch tick synchronized with intense haptic pulse vibrations at 3s, 2s, and 1s.
+* **Smart Screen Wake Lock:** Keeps device screen awake strictly during active turns, auto-pausing when the app loses focus or tab changes.
+* **The "Undo" Button:** Accidentally clicked "Correct" instead of "Taboo"? Rewind button fixes accidental clicks instantly and pauses the timer without obscuring the card.
+* **Interactive Round Review UI:** Modify card results retroactively on the post-round summary screen with live net score recalculation.
+* **Capacitor & Google Play Ready:** Zero-bundler architecture compatible with Capacitor for standalone Android builds.
 
 ---
 
 ## 🛠️ Project Structure
 
 ```text
+├── icons/
+│   └── icon.svg         # High-resolution vector PWA and mobile icon
 ├── scripts/
 │   └── delete_cards.py  # Automation tool to manage and re-index cards dataset
-├── index.html           # Main layout and settings UI
-├── style.css            # UI design and animations
-├── app.js               # Core game state, timer and score logic
-├── cards.js             # 500+ Turkish taboo cards dataset (with 5 forbidden words each)
+├── app.js               # Core game engine, audio synthesizer, haptics & wake lock
+├── cards_tr.js          # 585+ Turkish taboo cards dataset
+├── cards_en.js          # 50+ English taboo cards dataset
+├── capacitor.config.json # Capacitor hybrid Android configuration
+├── i18n.js              # Localization dictionary (TR & EN)
+├── index.html           # Main layout, settings UI & PWA tags
+├── manifest.json        # Web App Manifest for PWA & mobile
+├── style.css            # UI design, glassmorphism, animations & safe area insets
+├── sw.js                # Service worker for offline caching & dynamic precache
 ├── README.md            # Documentation
+├── ROADMAP.md           # Development milestones and feature roadmap
 └── LICENSE
 ```
 
@@ -68,16 +78,6 @@ python scripts/delete_cards.py
    * Press **PAS** to skip the current word.
    * Press **Geri Al (Undo)** if you misclicked any button to restore the previous card and score.
 4. **Win:** The team with the highest score at the end of all rounds wins the trophy!
-
----
-
-## 🗺️ Roadmap & Future Goals
-
-> ⚠️ **Current Status:** The application is currently optimized and available **exclusively in Turkish**.
-
-* [x] **Dynamic Undo System:** Ability to rewind misclicks during live gameplay.
-* [ ] **English Language Support:** Multi-language system localization and a comprehensive English word database.
-* [ ] **Interactive Round Review UI:** Allow players to modify card results (toggle between Correct, Taboo, and Pass) retroactively on the post-round summary screen to fix referee errors.
 
 ---
 

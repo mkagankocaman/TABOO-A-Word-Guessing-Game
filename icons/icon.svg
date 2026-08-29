@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="60%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#fde047"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#f59e0b" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Arka Plan -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+
+  <!-- Arka Kart -->
+  <rect x="140" y="80" width="240" height="320" rx="28" fill="#1e293b" stroke="rgba(239,68,68,0.4)" stroke-width="4" transform="rotate(12 260 240)" filter="url(#shadow)" opacity="0.75"/>
+  
+  <!-- Ön Kart -->
+  <g transform="rotate(-6 250 250)">
+    <rect x="126" y="90" width="248" height="330" rx="28" fill="#0f172a" stroke="rgba(245,158,11,0.6)" stroke-width="4" filter="url(#shadow)"/>
+    
+    <!-- Kart İçi Çizgiler -->
+    <rect x="156" y="125" width="188" height="42" rx="12" fill="url(#cardGrad)" filter="url(#glow)"/>
+    <text x="250" y="153" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="22" fill="#020617" text-anchor="middle" letter-spacing="2">TABU</text>
+
+    <!-- 5 Yasaklı Kelime Çizgisi -->
+    <rect x="156" y="195" width="188" height="24" rx="8" fill="#1e293b" stroke="rgba(239,68,68,0.4)" stroke-width="2"/>
+    <rect x="156" y="232" width="188" height="24" rx="8" fill="#1e293b" stroke="rgba(239,68,68,0.4)" stroke-width="2"/>
+    <rect x="156" y="269" width="188" height="24" rx="8" fill="#1e293b" stroke="rgba(239,68,68,0.4)" stroke-width="2"/>
+    <rect x="156" y="306" width="188" height="24" rx="8" fill="#1e293b" stroke="rgba(239,68,68,0.4)" stroke-width="2"/>
+    <rect x="156" y="343" width="188" height="24" rx="8" fill="#1e293b" stroke="rgba(239,68,68,0.4)" stroke-width="2"/>
+  </g>
+
+  <!-- Yıldız Rozeti -->
+  <circle cx="370" cy="380" r="44" fill="url(#cardGrad)" filter="url(#shadow)"/>
+  <path d="M370 354 L380 376 L404 378 L386 394 L392 418 L370 404 L348 418 L354 394 L336 378 L360 376 Z" fill="#020617"/>
+</svg>

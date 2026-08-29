@@ -23,6 +23,13 @@ const TRANSLATIONS = {
     deckResetSuccess: "Sıfırlandı!",
     startGameBtn: "Oyunu Başlat",
     
+    // PWA & Mobil
+    pwaInstallTitle: "Uygulamayı Cihazına Yükle",
+    pwaInstallDesc: "İnternet bağlantısı olmadan tam ekran oynamak için ana ekranına ekle.",
+    pwaInstallBtn: "Ana Ekrana Ekle",
+    pwaInstalledSuccess: "Uygulama Yüklendi!",
+    exitConfirm: "Aktif oyundan çıkmak ve ana menüye dönmek istediğinize emin misiniz?",
+
     // Hazırlık Ekranı
     roundBadge: (r, t) => `Tur ${r} / ${t}`,
     readySubtitle: "Sıra sizde! Anlatıcı cihazı eline alsın.",
@@ -89,6 +96,13 @@ const TRANSLATIONS = {
     deckResetSuccess: "Reset!",
     startGameBtn: "Start Game",
     
+    // PWA & Mobile
+    pwaInstallTitle: "Install App on Device",
+    pwaInstallDesc: "Add to home screen for full-screen offline gameplay.",
+    pwaInstallBtn: "Add to Home Screen",
+    pwaInstalledSuccess: "App Installed!",
+    exitConfirm: "Are you sure you want to exit the game and return to the main menu?",
+
     // Ready Screen
     roundBadge: (r, t) => `Round ${r} / ${t}`,
     readySubtitle: "Your turn! The describer should take the device.",

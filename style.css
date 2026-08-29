@@ -253,6 +253,85 @@ input[type="range"].range-red::-webkit-slider-thumb {
     color: #f87171;
 }
 
+/* 📲 PWA KURULUM BANNER'I */
+.pwa-install-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    padding: 10px 12px;
+    border-radius: 14px;
+    gap: 8px;
+    margin-top: 4px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    animation: screenSlideIn 0.35s ease-out;
+}
+
+.pwa-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+}
+
+.pwa-banner-icon {
+    width: 32px;
+    height: 32px;
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fbbf24;
+    flex-shrink: 0;
+}
+
+.pwa-banner-text-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pwa-install-title {
+    font-size: clamp(11px, 3.2vw, 12px);
+    font-weight: 800;
+    color: #f8fafc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pwa-install-desc {
+    font-size: clamp(9.5px, 2.7vw, 10.5px);
+    font-weight: 600;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-pwa-install-action {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: none;
+    color: #020617;
+    font-size: clamp(10.5px, 3vw, 12px);
+    font-weight: 900;
+    padding: 6px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+    transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.btn-pwa-install-action:active {
+    transform: scale(0.94);
+}
+
+
 /* ==========================================================================
    BUTONLAR
    ========================================================================== */

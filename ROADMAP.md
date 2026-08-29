@@ -26,13 +26,17 @@ Bu belge, Taboo kelime tahmin oyunu için gelecekte hayata geçirilmesi planlana
 
 ---
 
-## 📱 Aşama 3: Progressive Web App (PWA) & Mobil Uygulama Deneyimi
-* **Amaç:** Web sitesinin mobil cihazlarda yerel bir uygulama gibi yüklenebilmesi ve tamamen çevrimdışı çalışabilmesi.
-* **Detaylar:**
-  * `manifest.json` dosyası (uygulama ikonları, splash renkleri, display: standalone ayarı).
-  * Service Worker (`sw.js`) ile statik dosyaların ve kartların önbelleğe (cache) alınması.
-  * Mobil tarayıcılarda "Ana Ekrana Ekle" (Install Prompt) yönlendirmesi.
-  * Destekleyen mobil cihazlarda buton tıklamaları için titreşim geri bildirimi (Vibration API / Haptic feedback).
+## ✅ Aşama 3: Hibrit Mobil Stratejisi (PWA + Capacitor & Play Store) [Tamamlandı]
+* **Amaç:** Hem web tarayıcılarında mükemmel bir PWA (çevrimdışı/ana ekrana ekleme) deneyimi sunmak hem de Capacitor ile Google Play Store'da ilk indirmeden itibaren %100 internetsiz çalışan yerel bir Android oyunu yayınlamak.
+* **Tamamlanan Özellikler:**
+  * **PWA & Web Varlıkları:** `manifest.json` yapılandırması (standalone, dikey yönelim, koyu tema `#020617`, vektörel SVG ikon seti).
+  * **Dinamik Kart Precache & Cache-First Service Worker (`sw.js`):** Dinamik yüklenen `cards_tr.js` ve `cards_en.js` dahil tüm varlıkların önbelleğe alınmasıyla sıfır internette %100 çevrimdışı çalışma.
+  * **Akıllı Ekran Açık Tutma (Screen Wake Lock):** Yalnızca aktif tur esnasında ekran kilidinin açık tutulması; sekme arka plana geçtiğinde sürenin boşa akmaması için otomatik duraklatma ve geri dönüldüğünde kilidin güvenle yenilenmesi.
+  * **Donanımsal Geri Tuşu & Popstate Yönetimi:** Aktif tur esnasında geri tuşuna basıldığında sayfanın terk edilmesini önleyip oyunu anında "Pause" moduna alma ve güvenli onay akışı.
+  * **⏰ Son 10s & Son 3s Ses ve Titreşim Koreografisi:** 10-4 saniye arası standart uyarı tıkı; son 3 saniyede (3, 2, 1) hızlandırılmış yüksek tonlu nabız sesi + hissedilir senkronize titreşim darbeleri; süre bitiminde bitiş düdüğü ve kapanış titreşimi.
+  * **Hibrit Haptic Titreşim Motoru (`HapticManager`):** Buton tıklamalarında (Doğru, Tabu, Pas, Geri Al) eyleme özel ayırt edici titreşimler (Web'de `navigator.vibrate`, Android'de `@capacitor/haptics`).
+  * **Uygulama İçi PWA Yükleme Banner'ı:** `beforeinstallprompt` ile başlangıç ekranında şık "Ana Ekrana Ekle" arayüzü (kuruluysa otomatik gizlenir).
+  * **Sıfır Paketleyici (Zero-Bundler) Capacitor Entegrasyonu:** `capacitor.config.json` ile saf Vanilla JS mimarisini bozmadan Android derleme hazırlığı.
 
 ---
 
