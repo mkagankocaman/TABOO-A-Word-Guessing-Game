@@ -2,7 +2,7 @@
  * TABOO WORD GAME - SERVICE WORKER (OFFLINE PWA ENGINE)
  */
 
-const CACHE_NAME = 'taboo-cache-v5';
+const CACHE_NAME = 'taboo-cache-v6';
 
 const PRECACHE_ASSETS = [
   './',
